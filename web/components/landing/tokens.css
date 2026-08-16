@@ -1,0 +1,47 @@
+/* ============================================================================
+   MANIFIESTA — con Victoria · tokens.css
+   FICHA-ARTE: blanco crema, rosado blush, dorado suave — femenino y delicado
+   ============================================================================ */
+
+:root {
+  /* ── SUPERFICIES ── */
+  --bg: #fdf8f2;              /* crema cálida — nunca blanco puro */
+  --surface: #fffaf6;         /* casi blanco con tinte rosa — secciones elevadas */
+  --surface-2: #f5ece3;       /* crema más profunda — wells, frames placeholder */
+
+  /* ── TEXTO ── */
+  --text-primary: #2c1810;    /* marrón muy oscuro con tinte dorado */
+  --text-secondary: #7a5c52;  /* marrón suave */
+  --text-tertiary: #a68878;   /* marrón claro — ≥4.5:1 sobre --bg */
+
+  /* ── MARCA ── */
+  --accent: #b8833a;          /* dorado suave — CTA y elementos clave */
+  --accent-2: #d4a0a0;        /* rosado blush — mesh del hero, detalle */
+
+  /* ── FORMA ── */
+  --radius-card: 24px;        /* tarjetas — muy redondeado, femenino */
+  --radius-button: 100px;     /* pill — botones */
+
+  /* ── TIPOGRAFÍA ── */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'DM Sans', 'Segoe UI', sans-serif;
+
+  /* ── SOMBRAS con tinte cálido ── */
+  --shadow-1: 0 1px 3px rgb(184 131 58 / 0.08);
+  --shadow-2: 0 16px 40px -12px rgb(184 131 58 / 0.18);
+
+  /* ── DERIVADOS (no se tocan) ── */
+  --chip-bg: color-mix(in oklab, var(--accent) 10%, transparent);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}

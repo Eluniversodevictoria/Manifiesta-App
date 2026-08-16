@@ -50,10 +50,10 @@ Anotado: construcción avanza con gate de audiencia propia; se persigue señal d
 | Plan | Precio | Qué incluye |
 |------|--------|-------------|
 | Free | $0 | 1 práctica diaria · 3 manifestaciones guardadas · Biblioteca básica (10 prácticas) |
-| Pro | $12/mes | Prácticas diarias ilimitadas · "Necesito manifestar..." ilimitado · Biblioteca completa · Historial completo · Rituales semanales · Journaling ilimitado |
-| Anual | $97/año (~$8.08/mes) | Todo Pro + ahorro de ~33% · Se muestra como "$8/mes" con total anual visible |
+| Pro | $7.99/mes | Prácticas diarias ilimitadas · "Necesito manifestar..." ilimitado · Biblioteca completa · Historial completo · Rituales semanales · Journaling ilimitado |
+| Anual | $59.99/año (~$5/mes) | Todo Pro + ahorro de ~37% · Se muestra como "$5/mes" con total anual visible |
 
-**Precio base:** $12/mes — dentro del rango del nicho espiritual/bienestar ($7-15/mes). Ajustable tras medir WTP con audiencia de Victoria.
+**Precio base:** $7.99/mes / $59.99/año — rango validado contra competidores reales del nicho (I Am $4.99, Manifestive $8.99, ThinkUp $7.99). Ajustado para LATAM donde $12 genera fricción psicológica alta.
 
 ---
 
