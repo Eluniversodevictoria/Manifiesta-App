@@ -3,10 +3,12 @@
 // MANIFIESTA — Paywall post-onboarding (Fase 2 de la Secuencia Maestra)
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import { Check, Star, Sparkles } from 'lucide-react';
 import { usePlan, PlanProvider, type PlanPeriodo } from '@/lib/PlanContext';
+
+const HOTMART_MENSUAL = 'https://pay.hotmart.com/D107227544L?off=6ypur4wh';
+const HOTMART_ANUAL   = 'https://pay.hotmart.com/D107227544L?off=at20rj67';
 
 const DESEO_LABELS: Record<string, string> = {
   dinero:    'dinero y abundancia',
@@ -24,25 +26,25 @@ const FEATURES = [
 ];
 
 function PaywallPageInner() {
-  const router = useRouter();
-  const { upgradeToPro } = usePlan();
   const [deseo, setDeseo] = useState('');
   const [planSel, setPlanSel] = useState<PlanPeriodo>('anual');
-  const [activando, setActivando] = useState(false);
+  const [nombre, setNombre] = useState('');
+  const [email, setEmail] = useState('');
+  const [errorForm, setErrorForm] = useState('');
 
   useEffect(() => {
     setDeseo(sessionStorage.getItem('ob_deseo') ?? '');
+    setNombre(sessionStorage.getItem('ob_nombre') ?? '');
+    setEmail(sessionStorage.getItem('ob_email') ?? '');
   }, []);
 
   const handleActivar = () => {
-    setActivando(true);
-    // TODO: reemplazar con URL de Hotmart cuando esté listo
-    // window.location.href = `https://hotmart.com/...?plan=${planSel}`;
-    setTimeout(() => {
-      upgradeToPro(planSel);
-      setActivando(false);
-      router.push('/app');
-    }, 900);
+    if (!nombre.trim()) { setErrorForm('Escribe tu nombre.'); return; }
+    if (!email.trim() || !email.includes('@')) { setErrorForm('Escribe un email válido.'); return; }
+    setErrorForm('');
+    const base = planSel === 'anual' ? HOTMART_ANUAL : HOTMART_MENSUAL;
+    const url = `${base}&name=${encodeURIComponent(nombre.trim())}&email=${encodeURIComponent(email.trim())}`;
+    window.location.href = url;
   };
 
   const deseoLabel = DESEO_LABELS[deseo] ?? deseo;
@@ -224,32 +226,52 @@ function PaywallPageInner() {
           </div>
         </motion.div>
 
+        {/* Captura de nombre y email */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.42 }}
+          className="mt-5 w-full max-w-md space-y-3"
+        >
+          <p className="text-sm font-semibold text-[var(--text-primary)]">Guardamos tu acceso en Hotmart</p>
+          <input
+            type="text"
+            placeholder="Tu nombre"
+            value={nombre}
+            onChange={e => { setNombre(e.target.value); setErrorForm(''); }}
+            className="h-12 w-full rounded-2xl border px-4 text-base focus:outline-none"
+            style={{ background: 'var(--surface)', borderColor: 'color-mix(in oklab, var(--text-tertiary) 30%, transparent)', color: 'var(--text-primary)' }}
+          />
+          <input
+            type="email"
+            placeholder="Tu email"
+            value={email}
+            onChange={e => { setEmail(e.target.value); setErrorForm(''); }}
+            className="h-12 w-full rounded-2xl border px-4 text-base focus:outline-none"
+            style={{ background: 'var(--surface)', borderColor: 'color-mix(in oklab, var(--text-tertiary) 30%, transparent)', color: 'var(--text-primary)' }}
+          />
+          {errorForm && <p className="text-xs" style={{ color: 'var(--error)' }}>{errorForm}</p>}
+        </motion.div>
+
         {/* CTA principal */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.48 }}
+          transition={{ duration: 0.4, delay: 0.52 }}
           className="mt-4 w-full max-w-md space-y-3"
         >
           <motion.button
             type="button"
             whileTap={{ scale: 0.97 }}
             onClick={handleActivar}
-            disabled={activando}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-[var(--radius-button)] bg-[var(--accent)] text-base font-semibold text-white shadow-[0_8px_30px_color-mix(in_oklab,var(--accent)_28%,transparent)] [touch-action:manipulation] disabled:opacity-70"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-[var(--radius-button)] bg-[var(--accent)] text-base font-semibold text-white shadow-[0_8px_30px_color-mix(in_oklab,var(--accent)_28%,transparent)] [touch-action:manipulation]"
           >
-            {activando ? (
-              <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-            ) : (
-              <>
-                <Sparkles size={16} strokeWidth={2} />
-                Activar mis 7 días gratis
-              </>
-            )}
+            <Sparkles size={16} strokeWidth={2} />
+            Continuar a mi prueba gratis
           </motion.button>
 
           <p className="text-center text-xs text-[var(--text-tertiary)]">
-            Cancela desde Hotmart antes del día 7 · Sin cobros sorpresa
+            Checkout seguro por Hotmart · Cancela antes del día 7, sin cobros
           </p>
         </motion.div>
       </main>

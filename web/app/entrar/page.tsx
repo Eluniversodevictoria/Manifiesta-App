@@ -45,7 +45,7 @@ function EntrarContent() {
   const urlError = searchParams.get('error');
 
   const [modo, setModo] = useState<'principal' | 'email'>('principal');
-  const [esLogin, setEsLogin] = useState(false);
+  const [esLogin, setEsLogin] = useState(true); // siempre login — registro solo vía Hotmart
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [verPass, setVerPass] = useState(false);
@@ -209,20 +209,8 @@ function EntrarContent() {
                 }}
               >
                 <Mail size={17} strokeWidth={2} />
-                Continuar con email
+                Entrar con email
               </motion.button>
-
-              <p className="mt-6 text-center text-xs" style={{ color: 'var(--text-secondary)' }}>
-                ¿Ya tienes cuenta?{' '}
-                <button
-                  type="button"
-                  onClick={() => { setModo('email'); setEsLogin(true); }}
-                  className="font-semibold underline-offset-2 hover:underline [touch-action:manipulation]"
-                  style={{ color: 'var(--accent)' }}
-                >
-                  Entra aquí
-                </button>
-              </p>
 
               <p className="mt-8 text-center text-xs leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
                 Al continuar aceptas los{' '}
@@ -246,10 +234,10 @@ function EntrarContent() {
                 className="mb-1.5 text-2xl font-bold leading-tight tracking-tight"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                {esLogin ? 'Bienvenida de vuelta' : 'Crea tu cuenta'}
+                Bienvenida de vuelta
               </h1>
               <p className="mb-6 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                {esLogin ? 'Entra con tu email y contraseña' : 'Solo necesitas email y contraseña'}
+                Entra con tu email y contraseña
               </p>
 
               {/* Éxito: email de confirmación enviado */}
