@@ -145,7 +145,7 @@ export function VictoriaAudioPlayer({
     audio.currentTime = ratio * duration;
   }, [duration]);
 
-  if (preferencia === 'leer' || estado === 'none') return null;
+  if (estado === 'none') return null;
 
   const progress = duration > 0 ? position / duration : 0;
   const base = `rounded-2xl px-4 py-3 ${className}`;
