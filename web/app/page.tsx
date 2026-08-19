@@ -109,7 +109,7 @@ export default function LandingManifiesta() {
       {/* FOOTER LEGAL */}
       <FooterLegal
         appName="MANIFIESTA — con Victoria"
-        soporteEmail="hola@manifiesta.app"
+        soporteEmail="soportemanifiesta.app@gmail.com"
         enlaces={[
           { label: 'Privacidad', href: '/privacidad' },
           { label: 'Términos', href: '/terminos' },

@@ -44,8 +44,8 @@ export default function TerminosPage() {
         <p>
           La garantía comercial es de <strong>7 días</strong> desde la fecha de compra. Se
           solicita a través de Hotmart o escribiéndonos a{' '}
-          <a href="mailto:manifiesta.app@mail.com" className="underline underline-offset-2">
-            manifiesta.app@mail.com
+          <a href="mailto:soportemanifiesta.app@gmail.com" className="underline underline-offset-2">
+            soportemanifiesta.app@gmail.com
           </a>{' '}
           para orientarte.
         </p>
@@ -119,7 +119,7 @@ function Footer() {
         <Link href="/privacidad" className="underline underline-offset-2">Política de privacidad</Link>
         <Link href="/reembolsos" className="underline underline-offset-2">Política de reembolsos</Link>
         <Link href="/aviso-ia" className="underline underline-offset-2">Aviso de IA</Link>
-        <a href="mailto:manifiesta.app@mail.com" className="underline underline-offset-2">Contacto</a>
+        <a href="mailto:soportemanifiesta.app@gmail.com" className="underline underline-offset-2">Contacto</a>
       </nav>
     </footer>
   );

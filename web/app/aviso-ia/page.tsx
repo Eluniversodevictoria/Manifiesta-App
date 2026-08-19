@@ -77,7 +77,7 @@ function Footer() {
         <Link href="/privacidad" className="underline underline-offset-2">Política de privacidad</Link>
         <Link href="/terminos" className="underline underline-offset-2">Términos de servicio</Link>
         <Link href="/reembolsos" className="underline underline-offset-2">Reembolsos</Link>
-        <a href="mailto:manifiesta.app@mail.com" className="underline underline-offset-2">Contacto</a>
+        <a href="mailto:soportemanifiesta.app@gmail.com" className="underline underline-offset-2">Contacto</a>
       </nav>
     </footer>
   );

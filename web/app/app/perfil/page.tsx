@@ -173,7 +173,7 @@ export default function PerfilPage() {
     setEliminando(true);
     // TODO: llamar a /api/delete-account cuando el endpoint esté listo
     // Por ahora redirige al email de soporte
-    window.location.href = 'mailto:manifiesta.app@mail.com?subject=Eliminar%20mi%20cuenta&body=Hola%2C%20quiero%20eliminar%20mi%20cuenta%20y%20todos%20mis%20datos.';
+    window.location.href = 'mailto:soportemanifiesta.app@gmail.com?subject=Eliminar%20mi%20cuenta&body=Hola%2C%20quiero%20eliminar%20mi%20cuenta%20y%20todos%20mis%20datos.';
     setEliminando(false);
     setConfirmarEliminar(false);
   };

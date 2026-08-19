@@ -18,8 +18,8 @@ export default function PrivacidadPage() {
           MANIFIESTA — con Victoria es responsable del tratamiento necesario para operar la
           aplicación. Para consultas, correcciones, eliminación de datos, revocación de
           consentimiento o cualquier reclamo, escribe a{' '}
-          <a href="mailto:manifiesta.app@mail.com" className="underline underline-offset-2">
-            manifiesta.app@mail.com
+          <a href="mailto:soportemanifiesta.app@gmail.com" className="underline underline-offset-2">
+            soportemanifiesta.app@gmail.com
           </a>{' '}
           desde el correo asociado a tu cuenta.
         </p>
@@ -90,8 +90,8 @@ export default function PrivacidadPage() {
           Puedes conocer, actualizar, rectificar o solicitar la eliminación de tus datos;
           pedir prueba de tu autorización; conocer el uso dado a la información; revocar el
           consentimiento y presentar consultas o reclamos escribiéndonos a{' '}
-          <a href="mailto:manifiesta.app@mail.com" className="underline underline-offset-2">
-            manifiesta.app@mail.com
+          <a href="mailto:soportemanifiesta.app@gmail.com" className="underline underline-offset-2">
+            soportemanifiesta.app@gmail.com
           </a>
           . Si resides en EE.UU. puedes acudir ante la FTC; si estás en California, también
           aplican tus derechos bajo la CCPA.
@@ -142,7 +142,7 @@ function Footer() {
         <Link href="/terminos" className="underline underline-offset-2">Términos de servicio</Link>
         <Link href="/reembolsos" className="underline underline-offset-2">Política de reembolsos</Link>
         <Link href="/aviso-ia" className="underline underline-offset-2">Aviso de IA</Link>
-        <a href="mailto:manifiesta.app@mail.com" className="underline underline-offset-2">Contacto</a>
+        <a href="mailto:soportemanifiesta.app@gmail.com" className="underline underline-offset-2">Contacto</a>
       </nav>
     </footer>
   );

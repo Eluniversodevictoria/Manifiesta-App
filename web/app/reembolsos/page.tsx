@@ -33,8 +33,8 @@ export default function ReembolsosPage() {
           </li>
           <li>
             <strong>Escribiéndonos:</strong> manda un correo a{' '}
-            <a href="mailto:manifiesta.app@mail.com" className="underline underline-offset-2">
-              manifiesta.app@mail.com
+            <a href="mailto:soportemanifiesta.app@gmail.com" className="underline underline-offset-2">
+              soportemanifiesta.app@gmail.com
             </a>{' '}
             desde el correo con el que compraste y te orientamos de inmediato.
           </li>
@@ -86,7 +86,7 @@ function Footer() {
         <Link href="/privacidad" className="underline underline-offset-2">Política de privacidad</Link>
         <Link href="/terminos" className="underline underline-offset-2">Términos de servicio</Link>
         <Link href="/aviso-ia" className="underline underline-offset-2">Aviso de IA</Link>
-        <a href="mailto:manifiesta.app@mail.com" className="underline underline-offset-2">Contacto</a>
+        <a href="mailto:soportemanifiesta.app@gmail.com" className="underline underline-offset-2">Contacto</a>
       </nav>
     </footer>
   );
