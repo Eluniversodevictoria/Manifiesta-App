@@ -1,45 +1,77 @@
 /* ============================================================================
    MANIFIESTA — con Victoria · tokens.css
-   FICHA-ARTE: blanco crema, rosado blush, dorado suave — femenino y delicado
+
+   PALETA: marfil + blanco cálido + tinta oscura + Rosa Victoria como acento.
+   Proporción visual: 60% marfil/crema · 25% blanco cálido · 10% tinta · 5% rosa.
+   El rosa aparece en CTAs, palabras clave, estados activos y momentos emocionales.
+   NO como fondo dominante de toda la pantalla.
    ============================================================================ */
 
 :root {
   /* ── SUPERFICIES ── */
-  --bg: #fdf8f2;              /* crema cálida — nunca blanco puro */
-  --surface: #fffaf6;         /* casi blanco con tinte rosa — secciones elevadas */
-  --surface-2: #f5ece3;       /* crema más profunda — wells, frames placeholder */
+  --bg:        #FBF8F4;     /* marfil cálido — fondo principal */
+  --surface:   #FFFDFC;     /* blanco casi puro — cards, sheets */
+  --surface-2: #F5F0EA;     /* crema suave — wells, inputs, placeholders */
+  --surface-rose: #F7E9ED;  /* rosa pálido — secciones emocionales puntuales */
 
-  /* ── TEXTO ── */
-  --text-primary: #2c1810;    /* marrón muy oscuro con tinte dorado */
-  --text-secondary: #7a5c52;  /* marrón suave */
-  --text-tertiary: #a68878;   /* marrón claro — ≥4.5:1 sobre --bg */
+  /* ── TEXTO — espresso oscuro, no rosado ── */
+  --text-primary:   #24191D;   /* tinta espresso cálida */
+  --text-secondary: #75666B;   /* gris cálido neutro — NO rosa/malva */
+  --text-tertiary:  #A89DA0;   /* gris lavanda muy suave — labels, metadata */
 
-  /* ── MARCA ── */
-  --accent: #b8833a;          /* dorado suave — CTA y elementos clave */
-  --accent-2: #d4a0a0;        /* rosado blush — mesh del hero, detalle */
+  /* ── MARCA — Rosa Victoria como acento ── */
+  --accent:   #C96F8A;          /* Rosa Victoria — CTAs, énfasis, estados activos */
+  --accent-2: #E8C5D0;          /* rosa muy pálido — mesh hero sutil, halos */
+
+  /* ── CHAMPAGNE — micro-detalle ornamental ── */
+  --champagne: #D8C3A8;         /* arena cálida — numeración, líneas, sparkles puntuales */
 
   /* ── FORMA ── */
-  --radius-card: 24px;        /* tarjetas — muy redondeado, femenino */
-  --radius-button: 100px;     /* pill — botones */
+  --radius-card:   20px;
+  --radius-button: 100px;
 
   /* ── TIPOGRAFÍA ── */
   --font-display: 'Playfair Display', Georgia, serif;
-  --font-body: 'DM Sans', 'Segoe UI', sans-serif;
+  --font-body:    'DM Sans', 'Segoe UI', sans-serif;
 
-  /* ── SOMBRAS con tinte cálido ── */
-  --shadow-1: 0 1px 3px rgb(184 131 58 / 0.08);
-  --shadow-2: 0 16px 40px -12px rgb(184 131 58 / 0.18);
+  /* ── SOMBRAS neutras (no rosas) ── */
+  --shadow-1: 0 2px 12px rgb(36 25 29 / 0.07);
+  --shadow-2: 0 16px 48px -10px rgb(36 25 29 / 0.10);
 
-  /* ── DERIVADOS (no se tocan) ── */
-  --chip-bg: color-mix(in oklab, var(--accent) 10%, transparent);
+  /* ── DERIVADOS ── */
+  --chip-bg: color-mix(in oklab, var(--accent) 8%, transparent);
+
+  /* ── SEMÁNTICOS ── */
+  --success:        #4a7c59;
+  --success-bg:     color-mix(in oklab, #4a7c59 8%,  transparent);
+  --success-border: color-mix(in oklab, #4a7c59 22%, transparent);
+
+  --error:        #b91c1c;
+  --error-bg:     color-mix(in oklab, #b91c1c 7%,  transparent);
+  --error-border: color-mix(in oklab, #b91c1c 20%, transparent);
+
+  --warning:        #b45309;
+  --warning-bg:     color-mix(in oklab, #b45309 7%,  transparent);
+  --warning-border: color-mix(in oklab, #b45309 20%, transparent);
 }
 
-html {
-  scroll-behavior: smooth;
+/* ── ANIMACIÓN DECORATIVOS ── */
+@keyframes floatDecor {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50%       { transform: translateY(-8px) rotate(10deg); }
 }
+@media (prefers-reduced-motion: reduce) {
+  .decor { animation: none !important; }
+}
+
+/* Eliminado: .btn-glow (pulso constante). El glow del CTA ahora es un disparo
+   único via motion boxShadow en app/app/page.tsx. */
+
+html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
 }
+
 body {
   background: var(--bg);
   color: var(--text-primary);

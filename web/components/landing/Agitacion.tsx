@@ -12,9 +12,7 @@ import { SectionShell, useReveal, VIEWPORT_ONCE } from './ui';
 import { MarkedCopy, warnCopy, warnRango } from './MarkedCopy';
 
 export interface AgitacionProps {
-  /** 2-4 frases MARCADAS y cortas — el array es el contrato: nada de párrafos. */
   frases: string[];
-  /** Mini-card opcional "hoy vs en 6 meses" (55 §3). */
   contraste?: {
     labelHoy: string;
     hoy: string;
@@ -33,17 +31,18 @@ export function Agitacion({ frases, contraste, id }: AgitacionProps) {
     <SectionShell id={id} elevacion="elevada" flush="top" ariaLabel="El costo de seguir igual">
       <motion.div
         variants={contenedor}
-        initial="hidden"
+        initial={false}
         whileInView="visible"
         viewport={VIEWPORT_ONCE}
-        className="mx-auto max-w-[620px]"
+        className="mx-auto max-w-xl"
       >
         <div className="flex flex-col gap-4">
           {frases.map((f, i) => (
             <motion.p
               key={i}
               variants={item}
-              className="text-[17px] leading-[1.6] text-[var(--text-secondary)]"
+              className="text-lg leading-relaxed"
+              style={{ color: 'var(--text-secondary)' }}
             >
               <MarkedCopy text={f} />
             </motion.p>
@@ -52,18 +51,27 @@ export function Agitacion({ frases, contraste, id }: AgitacionProps) {
 
         {contraste && (
           <motion.div variants={item} className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-[var(--radius-card)] bg-[var(--bg)] p-5">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">
+            <div className="rounded-[var(--radius-card)] p-5" style={{ background: 'var(--bg)' }}>
+              <p
+                className="text-xs font-semibold uppercase tracking-[0.08em]"
+                style={{ color: 'var(--text-tertiary)' }}
+              >
                 {contraste.labelHoy}
               </p>
-              <p className="mt-2 text-[15px] leading-snug text-[var(--text-primary)]">{contraste.hoy}</p>
+              <p className="mt-2 text-sm leading-snug" style={{ color: 'var(--text-primary)' }}>
+                {contraste.hoy}
+              </p>
             </div>
-            {/* "si nada cambia": más apagado/frío — el peso lo pone el copy, no el rojo */}
-            <div className="rounded-[var(--radius-card)] bg-[var(--surface-2)] p-5">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">
+            <div className="rounded-[var(--radius-card)] p-5" style={{ background: 'var(--surface-2)' }}>
+              <p
+                className="text-xs font-semibold uppercase tracking-[0.08em]"
+                style={{ color: 'var(--text-tertiary)' }}
+              >
                 {contraste.labelFuturo}
               </p>
-              <p className="mt-2 text-[15px] leading-snug text-[var(--text-secondary)]">{contraste.futuro}</p>
+              <p className="mt-2 text-sm leading-snug" style={{ color: 'var(--text-secondary)' }}>
+                {contraste.futuro}
+              </p>
             </div>
           </motion.div>
         )}

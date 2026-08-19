@@ -16,11 +16,22 @@ export function Accent({ children }: { children: ReactNode }) {
   return <span className="text-[var(--accent)]">{children}</span>;
 }
 
-/* ── <Kicker> — caps 12px/600 tracking +0.08em en acento (máx 1 por sección) ── */
-export function Kicker({ children }: { children: ReactNode }) {
+/* ── <Kicker> — caps 12px/600 tracking +0.08em en acento (máx 1 por sección).
+   star=true añade el ✦ firma antes del texto. ── */
+export function Kicker({ children, star = false }: { children: ReactNode; star?: boolean }) {
   return (
-    <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)]">
+    <p className="mb-3 flex items-center justify-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.08em] text-[var(--accent)]">
+      {star && (
+        <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" style={{ width: 10, height: 10, flexShrink: 0 }}>
+          <path d="M10 0 L11.8 8.2 L20 10 L11.8 11.8 L10 20 L8.2 11.8 L0 10 L8.2 8.2 Z" />
+        </svg>
+      )}
       {children}
+      {star && (
+        <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" style={{ width: 10, height: 10, flexShrink: 0 }}>
+          <path d="M10 0 L11.8 8.2 L20 10 L11.8 11.8 L10 20 L8.2 11.8 L0 10 L8.2 8.2 Z" />
+        </svg>
+      )}
     </p>
   );
 }
@@ -153,14 +164,66 @@ export function CtaButton({
   alto?: 52 | 56;
   fullMobile?: boolean;
 }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = () => {
+    setLoading(true);
+  };
+
   return (
     <motion.a
       whileTap={{ scale: 0.97 }}
       href={href}
-      className={`inline-flex items-center justify-center rounded-[var(--radius-button)] bg-[var(--accent)] px-8 text-[17px] font-semibold text-[var(--bg)] shadow-[0_8px_30px_color-mix(in_oklab,var(--accent)_25%,transparent)] transition-colors duration-150 hover:bg-[color-mix(in_oklab,var(--accent)_88%,var(--text-primary))] [touch-action:manipulation] ${
-        alto === 56 ? 'h-14' : 'h-[52px]'
-      } ${fullMobile ? 'w-full sm:w-auto' : ''}`}
+      onClick={handleClick}
+      aria-disabled={loading}
+      className={`inline-flex items-center justify-center gap-2 rounded-[var(--radius-button)] bg-[var(--accent)] px-8 text-[17px] font-semibold text-[var(--bg)] shadow-[0_8px_30px_color-mix(in_oklab,var(--accent)_25%,transparent)] transition-colors duration-150 hover:bg-[color-mix(in_oklab,var(--accent)_88%,var(--text-primary))] [touch-action:manipulation] ${
+        loading ? 'pointer-events-none opacity-80' : ''
+      } ${alto === 56 ? 'h-14' : 'h-[52px]'} ${fullMobile ? 'w-full sm:w-auto' : ''}`}
     >
+      {loading && (
+        <span
+          className="size-4 animate-spin rounded-full border-2 border-[var(--bg)] border-t-transparent"
+          aria-hidden="true"
+        />
+      )}
+      {children}
+    </motion.a>
+  );
+}
+
+/* ── <CtaButtonOutline> — variante outline para el plan secundario: misma altura y loading,
+   borde acento translúcido, texto acento. Exportado para Oferta.tsx mensual. ── */
+export function CtaButtonOutline({
+  href,
+  children,
+  fullMobile = true,
+}: {
+  href: string;
+  children: ReactNode;
+  fullMobile?: boolean;
+}) {
+  const [loading, setLoading] = useState(false);
+  return (
+    <motion.a
+      whileTap={{ scale: 0.97 }}
+      href={href}
+      onClick={() => setLoading(true)}
+      aria-disabled={loading}
+      className={`inline-flex h-[52px] items-center justify-center gap-2 rounded-[var(--radius-button)] border px-8 text-[17px] font-semibold transition-colors duration-150 hover:bg-[var(--chip-bg)] [touch-action:manipulation] ${
+        loading ? 'pointer-events-none opacity-80' : ''
+      } ${fullMobile ? 'w-full' : ''}`}
+      style={{
+        borderColor: 'color-mix(in oklab, var(--accent) 45%, transparent)',
+        color: 'var(--accent)',
+      }}
+    >
+      {loading && (
+        <span
+          className="size-4 animate-spin rounded-full border-2 border-t-transparent"
+          style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }}
+          aria-hidden="true"
+        />
+      )}
       {children}
     </motion.a>
   );

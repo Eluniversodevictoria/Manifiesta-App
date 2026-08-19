@@ -1,0 +1,7 @@
+# Screenshots y archivos de trabajo temporales
+*.png
+*.jpg
+direcciones-abc.html
+.playwright-mcp/
+
+# El .gitignore de web/ ya cubre node_modules y .env

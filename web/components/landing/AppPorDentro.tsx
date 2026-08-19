@@ -1,11 +1,6 @@
 'use client';
 
 // KIT DE LANDING — §5 LA APP POR DENTRO (blueprint: 55 §5)
-// Carrusel de frames de teléfono 9:19.5 con scroll-snap + dots sincronizados
-// (IntersectionObserver) + mask-fade lateral (el corte nunca es seco) + CTA
-// mid-page con el MISMO verbo del hero (19). Sin screenshot → frame PLACEHOLDER
-// gris con el nombre de la pantalla futura (pendiente en ESTADO.md). Los
-// screenshots reales los toma la IA al cerrar la app (paso obligatorio de 19 §5).
 
 import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
@@ -13,22 +8,16 @@ import { CtaButton, Kicker, SectionShell, useReveal, VIEWPORT_ONCE } from './ui'
 import { MarkedCopy, warnCopy, warnRango } from './MarkedCopy';
 
 export interface FrameCarrusel {
-  /** Screenshot REAL a 375px (ratio 9:19.5). Sin src → placeholder honesto. */
   src?: string;
   alt?: string;
-  /** Label bajo el frame: nombre-RESULTADO de la pantalla ("Tu semana, ya planificada"). */
   label: string;
-  /** Nombre de la pantalla futura para el placeholder ("Plan del día"). */
   nombrePantalla?: string;
 }
 
 export interface AppPorDentroProps {
   kicker?: string;
-  /** Copy MARCADO del título (máx 8 palabras). */
   tituloMarked: string;
-  /** 3-5 frames. */
   frames: FrameCarrusel[];
-  /** CTA mid-page: mismas medidas y MISMO verbo del CTA héroe (19). */
   ctaLabel: string;
   ctaHref: string;
   id?: string;
@@ -50,7 +39,6 @@ export function AppPorDentro({
   const frameRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [activo, setActivo] = useState(0);
 
-  // Dots sincronizados con el frame más visible — obligatorios SIEMPRE (19 §5)
   useEffect(() => {
     const scroller = scrollerRef.current;
     if (!scroller) return;
@@ -81,15 +69,17 @@ export function AppPorDentro({
 
   return (
     <SectionShell id={id} elevacion="elevada" ariaLabel="La app por dentro">
-      <motion.div variants={contenedor} initial="hidden" whileInView="visible" viewport={VIEWPORT_ONCE}>
-        <motion.div variants={item} className="mx-auto max-w-[620px] text-center">
+      <motion.div variants={contenedor} initial={false} whileInView="visible" viewport={VIEWPORT_ONCE}>
+        <motion.div variants={item} className="mx-auto max-w-xl text-center">
           <Kicker>{kicker}</Kicker>
-          <h2 className="text-balance text-[30px] font-bold leading-[1.15] text-[var(--text-primary)] [font-family:var(--font-display)] md:text-[40px]">
+          <h2
+            className="text-balance text-3xl font-bold leading-tight tracking-tight md:text-4xl"
+            style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
+          >
             <MarkedCopy text={tituloMarked} />
           </h2>
         </motion.div>
 
-        {/* Pista con scroll-snap + fade en ambos bordes (mask-image) */}
         <motion.div variants={item} className="mt-10">
           <div
             ref={scrollerRef}
@@ -97,15 +87,16 @@ export function AppPorDentro({
           >
             {frames.map((f, i) => (
               <div key={i} className="shrink-0 snap-center">
-                <div
+                <motion.div
                   ref={(el) => {
                     frameRefs.current[i] = el;
                   }}
-                  className="relative aspect-[9/19.5] w-[250px] overflow-hidden rounded-[30px] border-[5px] shadow-[var(--shadow-2)]"
-                  style={{ borderColor: 'color-mix(in oklab, var(--text-primary) 90%, var(--accent))' }}
+                  whileHover={{ y: -6, scale: 1.02 }}
+                  transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                  className="relative aspect-[9/19.5] overflow-hidden shadow-[var(--shadow-2)]"
+                  style={{ width: 250, borderRadius: 30, borderWidth: 5, borderColor: 'color-mix(in oklab, var(--text-primary) 90%, var(--accent))' }}
                 >
                   {f.src ? (
-                    /* Si el proyecto usa next/image, cambiar por <Image> — <img> mantiene el kit portable */
                     <img
                       src={f.src}
                       alt={f.alt ?? f.label}
@@ -115,23 +106,26 @@ export function AppPorDentro({
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    /* Placeholder honesto (55 §5.2): gris elevado + nombre + dashed —
-                       nunca un frame que finja producto terminado */
-                    <div className="flex h-full w-full items-center justify-center border-2 border-dashed border-[color-mix(in_oklab,var(--text-tertiary)_40%,transparent)] bg-[var(--surface-2)] px-4">
-                      <span className="text-center text-[14px] font-medium text-[var(--text-secondary)]">
+                    <div
+                      className="flex h-full w-full items-center justify-center border-2 border-dashed px-4"
+                      style={{
+                        borderColor: 'color-mix(in oklab, var(--text-tertiary) 40%, transparent)',
+                        background: 'var(--surface-2)',
+                      }}
+                    >
+                      <span className="text-center text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
                         {f.nombrePantalla ?? f.label}
                       </span>
                     </div>
                   )}
-                </div>
-                <p className="mt-3 text-center text-[13px] font-medium text-[var(--text-secondary)]">
+                </motion.div>
+                <p className="mt-3 text-center text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
                   {f.label}
                 </p>
               </div>
             ))}
           </div>
 
-          {/* Dots: activo en acento, resto neutro 30% — tocables (ir al frame) */}
           <div className="mt-4 flex justify-center gap-2">
             {frames.map((f, i) => (
               <button
@@ -143,18 +137,19 @@ export function AppPorDentro({
                 className="flex size-6 items-center justify-center [touch-action:manipulation]"
               >
                 <span
-                  className={`size-2 rounded-full transition-colors duration-200 ${
-                    activo === i
-                      ? 'bg-[var(--accent)]'
-                      : 'bg-[color-mix(in_oklab,var(--text-tertiary)_30%,transparent)]'
-                  }`}
+                  className="size-2 rounded-full transition-colors duration-200"
+                  style={{
+                    background:
+                      activo === i
+                        ? 'var(--accent)'
+                        : 'color-mix(in oklab, var(--text-tertiary) 30%, transparent)',
+                  }}
                 />
               </button>
             ))}
           </div>
         </motion.div>
 
-        {/* CTA mid-page (reglas de CTA de 19): tras la prueba visual, cuando la confianza es alta */}
         <motion.div variants={item} className="mt-10 flex justify-center">
           <CtaButton href={ctaHref}>{ctaLabel}</CtaButton>
         </motion.div>
