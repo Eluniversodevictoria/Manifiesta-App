@@ -15,9 +15,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useManifestaciones } from '@/lib/ManifestacionesContext';
-import { usePlan } from '@/lib/PlanContext';
 import { useSheetUrgente } from '@/lib/SheetUrgenteContext';
-import { PaywallModal } from '@/components/PaywallModal';
 import { getFamiliaFromCategoria } from '@/lib/categorias';
 import {
   generarPractica, yaCompletoHoy, crearSnapshot,
@@ -548,9 +546,7 @@ function InicioContent() {
   const hoyCompletado = progress ? yaCompletoHoy(progress) : false;
   const cicloCompleto = progress?.cycleComplete ?? false;
 
-  const { isPro } = usePlan();
   const { abrir: abrirSheetUrgente } = useSheetUrgente();
-  const [showPaywall, setShowPaywall] = useState(false);
 
   // Estado de audio por bloque: clave = 'afirmacion' | 'protagonista' | 'profundizar-N'
   type AudioBlockState = { estado: import('@/lib/manifestaciones-types').AudioEstado; url?: string };
@@ -1361,8 +1357,7 @@ function InicioContent() {
           transition={{ duration: 0.3, delay: 0.38 }}
           className="pb-28"
         >
-          {true && (
-            <button
+          <button
               type="button"
               onClick={abrirSheetUrgente}
               className="flex w-full items-center gap-4 rounded-[var(--radius-card)] p-4 [touch-action:manipulation]"
@@ -1389,48 +1384,10 @@ function InicioContent() {
               </div>
               <ChevronRight size={16} color="var(--text-tertiary)" aria-hidden="true" />
             </button>
-          )}
-          {false && (
-            <button
-              type="button"
-              onClick={() => {}}
-              className="flex w-full items-center gap-4 rounded-[var(--radius-card)] p-4 [touch-action:manipulation]"
-              style={{
-                background: 'var(--surface)',
-                border: '1px solid color-mix(in oklab, var(--text-tertiary) 16%, transparent)',
-              }}
-            >
-              <span
-                className="flex size-10 shrink-0 items-center justify-center rounded-xl"
-                style={{ background: 'color-mix(in oklab, var(--text-tertiary) 10%, transparent)' }}
-                aria-hidden="true"
-              >
-                <Zap size={18} color="var(--text-tertiary)" strokeWidth={2} />
-              </span>
-              <div className="min-w-0 flex-1 text-left">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-display)' }}>
-                    Necesito manifestar ahora…
-                  </p>
-                </div>
-                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                  Práctica al momento · Solo en el plan Pro
-                </p>
-              </div>
-              <ChevronRight size={16} color="var(--text-tertiary)" aria-hidden="true" />
-            </button>
-          )}
         </motion.div>
 
       </div>
     </div>
-
-    <PaywallModal
-      abierto={showPaywall}
-      onCerrar={() => setShowPaywall(false)}
-      titulo='Práctica "Necesito manifestar…"'
-      descripcion="Acceso instantáneo cuando más lo necesitas. Exclusivo Pro."
-    />
 
     {/* ── STICKY CTA — visible cuando el CTA inline sale de pantalla ── */}
     <AnimatePresence>

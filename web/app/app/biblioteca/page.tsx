@@ -21,8 +21,6 @@ import {
   type TipoContenido,
 } from '@/lib/biblioteca-types';
 import { useBiblioteca } from '@/lib/useBiblioteca';
-import { usePlan } from '@/lib/PlanContext';
-import { PaywallModal } from '@/components/PaywallModal';
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -44,11 +42,9 @@ type EstadoManifestador = 'idle' | 'expandido' | 'cargando' | 'resultado';
 
 function ManifestadorIA({
   recientes,
-  isPro,
   onTapSugerencia,
 }: {
   recientes: string[];
-  isPro: boolean;
   onTapSugerencia: (id: string) => void;
 }) {
   const [estado, setEstado] = useState<EstadoManifestador>('idle');
@@ -655,7 +651,6 @@ function LayoutEditorial({
       {/* Manifestador IA */}
       <ManifestadorIA
         recientes={recientes}
-        isPro={false}
         onTapSugerencia={onTap}
       />
 
@@ -821,25 +816,10 @@ function LayoutEditorial({
 function BibliotecaContent() {
   const router = useRouter();
   const { guardados, recientes, toggleGuardado, registrarVisto } = useBiblioteca();
-  const { isPro } = usePlan();
   const [busqueda, setBusqueda] = useState('');
   const [filtroTipo, setFiltroTipo] = useState<TipoContenido | null>(null);
-  const [showPaywall, setShowPaywall] = useState(false);
-
-  // IDs de items que requieren Pro (solo para usuarios free)
-  const lockedIds = isPro ? [] : CATALOGO.filter((c) => c.premium).map((c) => c.id);
-
-  // Escuchar evento de los accesos rápidos del editorial
-  if (typeof window !== 'undefined') {
-    // Solo suscribir una vez — se hace en useEffect en un componente real,
-    // pero como esto es de sesión, lo colgamos del window directamente
-  }
 
   const irADetalle = (id: string) => {
-    if (lockedIds.includes(id)) {
-      setShowPaywall(true);
-      return;
-    }
     registrarVisto(id);
     router.push(`/app/biblioteca/${id}`);
   };
@@ -974,7 +954,7 @@ function BibliotecaContent() {
               <ListaResultados
                 items={resultados}
                 guardados={guardados}
-                lockedIds={lockedIds}
+                lockedIds={[]}
                 onTap={irADetalle}
                 onToggleGuardado={handleToggleGuardado}
                 titulo={
@@ -995,7 +975,7 @@ function BibliotecaContent() {
               <LayoutEditorial
                 guardados={guardados}
                 recientes={recientes}
-                lockedIds={lockedIds}
+                lockedIds={[]}
                 onTap={irADetalle}
                 onToggleGuardado={handleToggleGuardado}
               />
@@ -1004,12 +984,6 @@ function BibliotecaContent() {
         </AnimatePresence>
       </div>
 
-      <PaywallModal
-        abierto={showPaywall}
-        onCerrar={() => setShowPaywall(false)}
-        titulo="Contenido exclusivo Pro"
-        descripcion="Este ritual o práctica es parte del plan Pro de MANIFIESTA."
-      />
     </div>
   );
 }

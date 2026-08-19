@@ -9,10 +9,9 @@
 import { useState, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, Sparkles, CheckCircle2, ArrowLeft, Lock } from 'lucide-react';
+import { Send, Sparkles, CheckCircle2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useManifestaciones } from '@/lib/ManifestacionesContext';
-import { usePlan } from '@/lib/PlanContext';
 
 // ── Intenciones / categorías ──────────────────────────────────────────────
 const INTENCIONES = [
@@ -90,71 +89,10 @@ function ChipIntencion({
   );
 }
 
-// ── Vista bloqueada para usuarias gratuitas en modo urgente ───────────────
-const PREVIEW_TEXTO =
-  'Hoy recibo con gratitud todo lo que el universo tiene para mí.\nAbro mi corazón a la abundancia que ya viene en camino.\nSé que lo que deseo con claridad ya existe...';
-
-function ScriptingBloqueado({ prompt }: { prompt: string }) {
-  return (
-    <div className="flex flex-col gap-4 px-5">
-      {/* Guía de Victoria — visible */}
-      <div
-        className="flex items-start gap-2 rounded-2xl px-4 py-3"
-        style={{ background: 'color-mix(in oklab, var(--accent) 7%, transparent)' }}
-      >
-        <Sparkles size={15} color="var(--accent)" strokeWidth={1.8} className="mt-0.5 shrink-0" />
-        <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-          <span className="font-semibold" style={{ color: 'var(--accent)' }}>Victoria sugiere: </span>
-          {prompt}
-        </p>
-      </div>
-
-      {/* Preview borrosa */}
-      <div className="relative overflow-hidden rounded-2xl border" style={{ borderColor: 'color-mix(in oklab, var(--text-tertiary) 22%, transparent)' }}>
-        <div
-          className="select-none px-4 pt-4 pb-12 text-sm leading-relaxed whitespace-pre-line"
-          style={{ color: 'var(--text-primary)', background: 'var(--surface)', filter: 'blur(4px)', userSelect: 'none' }}
-          aria-hidden="true"
-        >
-          {PREVIEW_TEXTO}
-        </div>
-
-        {/* Overlay con CTA */}
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center"
-          style={{ background: 'color-mix(in oklab, var(--bg) 70%, transparent)' }}
-        >
-          <div
-            className="flex size-12 items-center justify-center rounded-full"
-            style={{ background: 'color-mix(in oklab, var(--accent) 12%, transparent)' }}
-          >
-            <Lock size={20} color="var(--accent)" strokeWidth={1.8} />
-          </div>
-          <p className="text-base font-semibold" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
-            ¿Quieres que Victoria cree prácticas como esta cada vez que lo necesites?
-          </p>
-          <Link
-            href="/onboarding/paywall"
-            className="flex h-11 items-center gap-2 rounded-full px-6 text-sm font-semibold text-white [touch-action:manipulation]"
-            style={{ background: 'var(--accent)', boxShadow: '0 6px 20px color-mix(in oklab, var(--accent) 28%, transparent)' }}
-          >
-            <Sparkles size={14} strokeWidth={2} />
-            Desbloquear MANIFIESTA Pro
-          </Link>
-          <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-            7 días gratis · Cancela cuando quieras
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Contenido principal ───────────────────────────────────────────────────
 function ScriptingContent() {
   const searchParams = useSearchParams();
   const { getById, addScript } = useManifestaciones();
-  const { isPro } = usePlan();
 
   const urgente = searchParams.get('modo') === 'urgente';
   const manifestacionId = searchParams.get('manifestacionId') ?? undefined;
@@ -183,31 +121,6 @@ function ScriptingContent() {
 
   const EASE = [0.16, 1, 0.3, 1] as const;
 
-  // Usuarias sin plan Pro en modo urgente ven preview bloqueada
-  if (urgente && !isPro) {
-    return (
-      <div className="flex flex-col">
-        <motion.div
-          initial={{ opacity: 0, y: -6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, ease: EASE }}
-          className="px-5 pt-6 pb-4"
-        >
-          <div className="flex items-center gap-3">
-            <div>
-              <h1 className="text-xl font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
-                Manifestar ahora
-              </h1>
-              <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                Escribe con intención y claridad
-              </p>
-            </div>
-          </div>
-        </motion.div>
-        <ScriptingBloqueado prompt={prompt} />
-      </div>
-    );
-  }
 
   const guardar = () => {
     if (!texto.trim()) return;

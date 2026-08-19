@@ -3,26 +3,26 @@
 
 import { getSugerenciasPorTema, type ContenidoBiblioteca } from './biblioteca-types';
 
-// ── Límites centralizados free vs pro ────────────────────────────────────────
+// ── Límites IA (sin distinción free/pro — acceso completo durante trial y suscripción) ────────
 export const LIMITE_IA = {
   // Cuántas generaciones de "Necesito manifestar..." puede hacer por día
   generacionesDiarias: {
-    free: 1,
+    free: 10,
     pro: 10,
   },
   // Cuántas prácticas diarias personalizadas (M0) puede tener por día
   practicaDiaria: {
-    free: 1,
-    pro: 99, // ilimitado en la práctica
+    free: 99,
+    pro: 99,
   },
   // Longitud máxima del texto TTS por bloque (caracteres)
   ttsMaxChars: {
-    free: 300,
+    free: 1000,
     pro: 1000,
   },
   // Cuántos bloques de audio puede generar por sesión
   audioBloquesporSesion: {
-    free: 2,
+    free: 20,
     pro: 20,
   },
 } as const;
@@ -94,11 +94,8 @@ export function decidirModo(
   // Si tiene contenido editorial relevante, siempre se muestra primero
   if (sugerencias.length >= 3) return 'editorial';
 
-  // Si el usuario pro tiene cupo, genera con IA para temas específicos
-  if (!agotado && plan === 'pro') return 'ia';
-
-  // Free con cupo: IA si hay pocas sugerencias editoriales
-  if (!agotado && plan === 'free' && sugerencias.length < 2) return 'ia';
+  // Con cupo disponible, genera con IA para temas específicos
+  if (!agotado) return 'ia';
 
   return 'editorial';
 }

@@ -1,20 +1,22 @@
 'use client';
 
-// PaywallModal — bottom sheet que aparece al tocar un feature Pro con plan Free.
-// Muestra beneficios del plan Pro, selector de precio y CTA.
-// onConfirm: en mock llama upgradeToPro(); cuando llegue Hotmart, abrirá la URL de pago.
+// PaywallModal — gate que aparece cuando trial_expired | subscription_inactive.
+// Redirige a Hotmart para elegir plan mensual o anual.
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Check, Crown, Sparkles } from 'lucide-react';
-import { usePlan, type PlanPeriodo } from '@/lib/PlanContext';
+import { X, Check, Sparkles } from 'lucide-react';
+import { type PlanPeriodo } from '@/lib/PlanContext';
+
+const HOTMART_MENSUAL = 'https://pay.hotmart.com/D107227544L?off=6ypur4wh';
+const HOTMART_ANUAL   = 'https://pay.hotmart.com/D107227544L?off=at20rj67';
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 const BENEFICIOS = [
-  'Manifestaciones ilimitadas (sin límite de 3)',
-  'Práctica "Necesito manifestar…" al instante',
-  'Biblioteca completa — todos los rituales y decretos',
+  'Práctica diaria personalizada por Victoria',
+  '"Necesito manifestar…" — práctica al instante',
+  'Manifestaciones y biblioteca sin límites',
   'Historial completo de tu práctica',
 ];
 
@@ -28,21 +30,14 @@ interface PaywallModalProps {
 export function PaywallModal({
   abierto,
   onCerrar,
-  titulo = 'Desbloquea el acceso completo',
-  descripcion = 'Este contenido es exclusivo del plan Pro.',
+  titulo = 'Elige tu plan para continuar',
+  descripcion = 'Tu período de prueba ha terminado.',
 }: PaywallModalProps) {
-  const { upgradeToPro } = usePlan();
   const [planSel, setPlanSel] = useState<PlanPeriodo>('anual');
-  const [activando, setActivando] = useState(false);
 
   const handleActivar = () => {
-    setActivando(true);
-    // En prod: abrir URL de Hotmart con el plan seleccionado
-    setTimeout(() => {
-      upgradeToPro(planSel);
-      setActivando(false);
-      onCerrar();
-    }, 900);
+    const url = planSel === 'anual' ? HOTMART_ANUAL : HOTMART_MENSUAL;
+    window.location.href = url;
   };
 
   return (
@@ -73,7 +68,7 @@ export function PaywallModal({
             style={{ background: 'var(--bg)', paddingBottom: 'max(32px, env(safe-area-inset-bottom))' }}
             role="dialog"
             aria-modal="true"
-            aria-label="Desbloquear plan Pro"
+            aria-label="Elegir plan"
           >
             {/* Handle */}
             <div
@@ -88,7 +83,7 @@ export function PaywallModal({
                   className="flex size-10 shrink-0 items-center justify-center rounded-2xl"
                   style={{ background: 'color-mix(in oklab, var(--accent) 12%, transparent)' }}
                 >
-                  <Crown size={20} fill="var(--accent)" color="var(--accent)" aria-hidden="true" />
+                  <Sparkles size={20} color="var(--accent)" strokeWidth={1.8} aria-hidden="true" />
                 </div>
                 <div>
                   <p className="text-base font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
@@ -146,7 +141,7 @@ export function PaywallModal({
                 </span>
                 <div>
                   <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Plan Anual</p>
-                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>$49.99/año · hoy</p>
+                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>$49.99/año</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xl font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
@@ -178,22 +173,15 @@ export function PaywallModal({
               type="button"
               whileTap={{ scale: 0.97 }}
               onClick={handleActivar}
-              disabled={activando}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-[var(--radius-button)] text-base font-semibold text-white [touch-action:manipulation] disabled:opacity-70"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-[var(--radius-button)] text-base font-semibold text-white [touch-action:manipulation]"
               style={{ background: 'var(--accent)', boxShadow: '0 8px 28px color-mix(in oklab, var(--accent) 28%, transparent)' }}
             >
-              {activando ? (
-                <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              ) : (
-                <>
-                  <Sparkles size={16} strokeWidth={2} />
-                  Activar plan {planSel === 'anual' ? 'Anual' : 'Mensual'}
-                </>
-              )}
+              <Sparkles size={16} strokeWidth={2} />
+              Continuar con plan {planSel === 'anual' ? 'Anual' : 'Mensual'}
             </motion.button>
 
             <p className="mt-2 text-center text-xs" style={{ color: 'var(--text-tertiary)' }}>
-              Sin tarjeta · Garantía de 7 días · Cancelas cuando quieras
+              Checkout seguro por Hotmart · Cancela cuando quieras
             </p>
           </motion.div>
         </>

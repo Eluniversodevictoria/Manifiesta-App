@@ -143,10 +143,12 @@ export default function PerfilPage() {
 
   const EASE = [0.16, 1, 0.3, 1] as const;
 
-  // Plan real desde contexto
-  const { isPro, planPeriodo } = usePlan();
-  const isPremium = isPro;
-  const plan: 'gratis' | 'mensual' | 'anual' = isPro ? (planPeriodo ?? 'mensual') : 'gratis';
+  // Estado de acceso desde contexto
+  const { hasAccess, isTrial, diasTrialRestantes, acceso, planPeriodo } = usePlan();
+  const isPremium = hasAccess;
+  const plan: 'trial' | 'mensual' | 'anual' | 'inactivo' =
+    acceso === 'paid_active' ? (planPeriodo ?? 'mensual') :
+    acceso === 'trial_active' ? 'trial' : 'inactivo';
 
   // Datos derivados del estado real
   const manifActiva = manifestaciones.find((m) => m.estado === 'activo');
@@ -193,14 +195,14 @@ export default function PerfilPage() {
           style={{ background: 'var(--accent)' }}
         >
           ✦
-          {isPremium && (
+          {plan === 'mensual' || plan === 'anual' ? (
             <span
               className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full"
               style={{ background: 'var(--bg)', boxShadow: '0 0 0 2px var(--bg)' }}
             >
               <Crown size={13} fill="var(--accent)" color="var(--accent)" aria-hidden="true" />
             </span>
-          )}
+          ) : null}
         </div>
 
         <h1 className="text-lg font-bold" style={{ fontFamily: 'var(--font-display)' }}>
@@ -247,7 +249,26 @@ export default function PerfilPage() {
 
         {/* ── PLAN ── */}
         <motion.div variants={reduced ? {} : staggerItem}>
-          {isPremium ? (
+          {plan === 'trial' ? (
+            <div
+              className="flex items-center gap-3 rounded-2xl px-4 py-3.5"
+              style={{
+                background: 'color-mix(in oklab, var(--accent) 8%, transparent)',
+                border: '1px solid color-mix(in oklab, var(--accent) 22%, transparent)',
+              }}
+            >
+              <Sparkles size={18} color="var(--accent)" strokeWidth={1.8} aria-hidden="true" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold" style={{ color: 'var(--accent)' }}>
+                  Prueba gratuita activa
+                </p>
+                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                  {diasTrialRestantes === 1 ? 'Queda 1 día' : `Quedan ${diasTrialRestantes} días`} · Acceso completo
+                </p>
+              </div>
+              <CheckCircle2 size={16} color="var(--accent)" strokeWidth={2.5} aria-hidden="true" />
+            </div>
+          ) : plan === 'mensual' || plan === 'anual' ? (
             <div
               className="flex items-center gap-3 rounded-2xl px-4 py-3.5"
               style={{
@@ -279,7 +300,7 @@ export default function PerfilPage() {
               <Sparkles size={18} color="var(--accent)" strokeWidth={1.8} aria-hidden="true" />
               <div className="flex-1 text-left">
                 <p className="text-sm font-semibold" style={{ color: 'var(--accent)' }}>
-                  Desbloquear acceso completo
+                  Elegir mi plan
                 </p>
                 <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                   Desde $4/mes con plan anual

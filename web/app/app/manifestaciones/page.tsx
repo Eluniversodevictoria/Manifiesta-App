@@ -12,8 +12,7 @@ import { useManifestaciones } from '@/lib/ManifestacionesContext';
 import { staggerContainer, staggerItem, TAP_CARD } from '@/lib/motion-presets';
 import { CATEGORIAS_MANIFESTACIONES } from '@/lib/categorias';
 import type { Manifestacion } from '@/lib/manifestaciones-types';
-import { usePlan, PLAN_LIMITS } from '@/lib/PlanContext';
-import { PaywallModal } from '@/components/PaywallModal';
+import { usePlan } from '@/lib/PlanContext';
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -235,22 +234,18 @@ function CardManifestado({ item }: { item: Manifestacion }) {
 // ── Pantalla ──────────────────────────────────────────────────────────────
 export default function ManifestacionesPage() {
   const { manifestaciones, add, getProgress } = useManifestaciones();
-  const { isPro } = usePlan();
   const prefersReduced = useReducedMotion() ?? false;
   const [mostrarForm, setMostrarForm] = useState(false);
   const [nuevoDeseo, setNuevoDeseo] = useState('');
   const [categoriaSelId, setCategoriaSelId] = useState<string>('Dinero');
   const [mostrarCats, setMostrarCats] = useState(false);
-  const [showPaywall, setShowPaywall] = useState(false);
 
   const activos   = manifestaciones.filter((m) => m.estado === 'activo');
   const manifestados = manifestaciones.filter((m) => m.estado === 'manifestado');
-  const limiteAlcanzado = !isPro && activos.length >= PLAN_LIMITS.maxManifestacionesActivas;
 
   const catSel = CATEGORIAS_MANIFESTACIONES.find((c) => c.id === categoriaSelId) ?? CATEGORIAS_MANIFESTACIONES[0];
 
   const handleAgregar = () => {
-    if (limiteAlcanzado) { setShowPaywall(true); return; }
     setMostrarForm(true);
   };
 
@@ -338,11 +333,9 @@ export default function ManifestacionesPage() {
               <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
                 Atrayendo ahora
               </p>
-              {!isPro && (
-                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                  {activos.length} / {PLAN_LIMITS.maxManifestacionesActivas}
-                </p>
-              )}
+              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                {activos.length} activos
+              </p>
             </motion.div>
 
             {/* Cards con stagger orquestado */}
@@ -374,40 +367,7 @@ export default function ManifestacionesPage() {
         >
           <AnimatePresence mode="wait">
             {!mostrarForm ? (
-              limiteAlcanzado ? (
-                <motion.button
-                  key="gate"
-                  type="button"
-                  onClick={handleAgregar}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="flex w-full items-center gap-3 rounded-[var(--radius-card)] px-4 py-4 [touch-action:manipulation]"
-                  style={{
-                    background: 'color-mix(in oklab, var(--accent) 5%, transparent)',
-                    border: '1px solid color-mix(in oklab, var(--accent) 22%, transparent)',
-                  }}
-                >
-                  <span
-                    className="flex size-8 shrink-0 items-center justify-center rounded-xl"
-                    style={{ background: 'color-mix(in oklab, var(--accent) 12%, transparent)' }}
-                    aria-hidden="true"
-                  >
-                    <Lock size={15} color="var(--accent)" strokeWidth={2} />
-                  </span>
-                  <div className="flex-1 text-left min-w-0">
-                    <p className="text-sm font-semibold" style={{ color: 'var(--accent)' }}>
-                      Deseos ilimitados con Pro
-                    </p>
-                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                      Plan gratis: máximo {PLAN_LIMITS.maxManifestacionesActivas} activos
-                    </p>
-                  </div>
-                  <ChevronRight size={15} color="var(--accent)" aria-hidden="true" />
-                </motion.button>
-              ) : (
-                <motion.button
+              <motion.button
                   key="btn"
                   type="button"
                   onClick={handleAgregar}
@@ -432,7 +392,6 @@ export default function ManifestacionesPage() {
                     Agregar nuevo deseo
                   </span>
                 </motion.button>
-              )
             ) : (
               <motion.div
                 key="form"
@@ -571,12 +530,6 @@ export default function ManifestacionesPage() {
       </div>
     </div>
 
-    <PaywallModal
-      abierto={showPaywall}
-      onCerrar={() => setShowPaywall(false)}
-      titulo="Manifestaciones ilimitadas"
-      descripcion={`El plan gratis permite ${PLAN_LIMITS.maxManifestacionesActivas} deseos activos.`}
-    />
     </>
   );
 }
