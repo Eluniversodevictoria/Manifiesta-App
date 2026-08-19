@@ -2,7 +2,8 @@
 
 // MANIFIESTA — Perfil
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { staggerContainer, staggerItem } from '@/lib/motion-presets';
@@ -161,10 +162,12 @@ export default function PerfilPage() {
   const [confirmarEliminar, setConfirmarEliminar] = useState(false);
   const [eliminando, setEliminando] = useState(false);
 
-  const handleCerrarSesion = () => {
+  const handleCerrarSesion = useCallback(async () => {
     setCerrandoSesion(true);
-    setTimeout(() => setCerrandoSesion(false), 2000);
-  };
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    window.location.href = '/';
+  }, []);
 
   const handleEliminarCuenta = async () => {
     setEliminando(true);
