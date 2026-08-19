@@ -1,7 +1,10 @@
-# Screenshots y archivos de trabajo temporales
-*.png
-*.jpg
-direcciones-abc.html
-.playwright-mcp/
+# Screenshots y archivos de trabajo temporales (raíz del proyecto)
+/landing-375.png
+/practica-*.png
+/practica-bottom-*.png
+/practica-primer-*.png
+/step4-*.png
+/direcciones-abc.html
+/.playwright-mcp/
 
 # El .gitignore de web/ ya cubre node_modules y .env
