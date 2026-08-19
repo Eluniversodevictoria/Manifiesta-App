@@ -98,17 +98,20 @@ function EntrarContent() {
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        },
       });
       if (signUpError) {
         if (signUpError.message.includes('already registered')) {
-          setError('Email o contraseña incorrectos.');
+          setError('Ya existe una cuenta con ese email. Usa "Entra aquí" para iniciar sesión.');
         } else {
-          setError(`Error: ${signUpError.message} (${signUpError.status ?? ''})`);
+          setError('No se pudo crear la cuenta. Intenta de nuevo.');
         }
         setCargando(false);
         return;
       }
-      window.location.href = next;
+      setExito('¡Cuenta creada! Revisa tu email para confirmar y luego entra aquí.');
       setCargando(false);
     }
   };
