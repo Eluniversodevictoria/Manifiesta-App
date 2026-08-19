@@ -106,7 +106,7 @@ function EntrarContent() {
         if (signUpError.message.includes('already registered')) {
           setError('Email o contraseña incorrectos.');
         } else {
-          setError('No se pudo crear la cuenta. Intenta de nuevo.');
+          setError(signUpError.message);
         }
         setCargando(false);
         return;
