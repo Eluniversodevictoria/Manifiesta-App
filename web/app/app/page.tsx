@@ -721,11 +721,6 @@ function InicioContent() {
         </div>
       </motion.header>
 
-      {/* Micro-disclaimer IA — visible y accesible, no intrusivo */}
-      <p className="mx-5 mt-1 text-xs leading-snug" style={{ color: 'var(--text-tertiary)' }}>
-        Práctica generada por IA · Orientación espiritual, no consejo profesional ·{' '}
-        <a href="/aviso-ia" className="underline underline-offset-2">Más info</a>
-      </p>
 
       <div className="flex flex-col gap-4 px-5">
 
