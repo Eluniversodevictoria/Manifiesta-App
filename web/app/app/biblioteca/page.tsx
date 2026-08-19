@@ -7,7 +7,7 @@ import { useState, useRef, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { staggerContainer, staggerItem } from '@/lib/motion-presets';
-import { Search, X, Bookmark, BookmarkCheck, Play, Clock, Lock, Flame, Sparkles, FileText, Eye, PenLine, Hash, BookOpen, Heart, Flower2, Wand2, ChevronRight, RefreshCw } from 'lucide-react';
+import { Search, X, Bookmark, BookmarkCheck, Play, Clock, Flame, Sparkles, FileText, Eye, PenLine, Hash, BookOpen, Heart, Flower2, Wand2, ChevronRight, RefreshCw } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { RespuestaManifestacion } from '@/lib/biblioteca-ai';
 import {
@@ -300,13 +300,11 @@ function ManifestadorIA({
 function ContentCard({
   item,
   guardado,
-  locked = false,
   onTap,
   onToggleGuardado,
 }: {
   item: ContenidoBiblioteca;
   guardado: boolean;
-  locked?: boolean;
   onTap: () => void;
   onToggleGuardado: (e: React.MouseEvent) => void;
 }) {
@@ -317,22 +315,12 @@ function ContentCard({
       style={{
         background: 'var(--surface)',
         border: '1px solid color-mix(in oklab, var(--text-tertiary) 16%, transparent)',
-        opacity: locked ? 0.75 : 1,
       }}
       onClick={onTap}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && onTap()}
     >
-      {locked && (
-        <div
-          className="absolute right-3 top-3 flex size-6 items-center justify-center rounded-full"
-          style={{ background: 'color-mix(in oklab, var(--accent) 12%, transparent)' }}
-          aria-label="Contenido Pro"
-        >
-          <Lock size={11} color="var(--accent)" strokeWidth={2.5} />
-        </div>
-      )}
       {/* Tipo + duración */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
@@ -346,17 +334,6 @@ function ContentCard({
             <span aria-hidden="true">{TIPO_EMOJI[item.tipo]}</span>
             {TIPO_LABEL[item.tipo]}
           </span>
-          {item.premium && (
-            <span
-              className="flex h-6 items-center rounded-full px-2 text-xs font-semibold"
-              style={{
-                background: 'color-mix(in oklab, var(--accent-muted, var(--accent)) 14%, transparent)',
-                color: 'color-mix(in oklab, var(--accent) 70%, var(--text-secondary))',
-              }}
-            >
-              ✦ Premium
-            </span>
-          )}
         </div>
         <div className="flex items-center gap-2">
           <span
@@ -558,14 +535,12 @@ function ChipFiltro({
 function ListaResultados({
   items,
   guardados,
-  lockedIds,
   onTap,
   onToggleGuardado,
   titulo,
 }: {
   items: ContenidoBiblioteca[];
   guardados: string[];
-  lockedIds: string[];
   onTap: (id: string) => void;
   onToggleGuardado: (id: string, e: React.MouseEvent) => void;
   titulo?: string;
@@ -605,7 +580,6 @@ function ListaResultados({
             key={item.id}
             item={item}
             guardado={guardados.includes(item.id)}
-            locked={lockedIds.includes(item.id)}
             onTap={() => onTap(item.id)}
             onToggleGuardado={(e) => onToggleGuardado(item.id, e)}
           />
@@ -619,13 +593,11 @@ function ListaResultados({
 function LayoutEditorial({
   guardados,
   recientes,
-  lockedIds,
   onTap,
   onToggleGuardado,
 }: {
   guardados: string[];
   recientes: string[];
-  lockedIds: string[];
   onTap: (id: string) => void;
   onToggleGuardado: (id: string, e: React.MouseEvent) => void;
 }) {
@@ -742,7 +714,7 @@ function LayoutEditorial({
                 key={item.id}
                 item={item}
                 guardado
-                locked={lockedIds.includes(item.id)}
+
                 onTap={() => onTap(item.id)}
                 onToggleGuardado={(e) => onToggleGuardado(item.id, e)}
               />
@@ -771,7 +743,7 @@ function LayoutEditorial({
                 key={item.id}
                 item={item}
                 guardado={guardados.includes(item.id)}
-                locked={lockedIds.includes(item.id)}
+
                 onTap={() => onTap(item.id)}
                 onToggleGuardado={(e) => onToggleGuardado(item.id, e)}
               />
@@ -800,7 +772,7 @@ function LayoutEditorial({
                 key={item.id}
                 item={item}
                 guardado={guardados.includes(item.id)}
-                locked={lockedIds.includes(item.id)}
+
                 onTap={() => onTap(item.id)}
                 onToggleGuardado={(e) => onToggleGuardado(item.id, e)}
               />
@@ -954,7 +926,6 @@ function BibliotecaContent() {
               <ListaResultados
                 items={resultados}
                 guardados={guardados}
-                lockedIds={[]}
                 onTap={irADetalle}
                 onToggleGuardado={handleToggleGuardado}
                 titulo={
@@ -975,7 +946,6 @@ function BibliotecaContent() {
               <LayoutEditorial
                 guardados={guardados}
                 recientes={recientes}
-                lockedIds={[]}
                 onTap={irADetalle}
                 onToggleGuardado={handleToggleGuardado}
               />

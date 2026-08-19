@@ -25,6 +25,8 @@ interface PaywallModalProps {
   onCerrar: () => void;
   titulo?: string;
   descripcion?: string;
+  /** Cuando es true, es el gate global: no hay botón de cierre ni backdrop clickeable */
+  forzado?: boolean;
 }
 
 export function PaywallModal({
@@ -32,6 +34,7 @@ export function PaywallModal({
   onCerrar,
   titulo = 'Elige tu plan para continuar',
   descripcion = 'Tu período de prueba ha terminado.',
+  forzado = false,
 }: PaywallModalProps) {
   const [planSel, setPlanSel] = useState<PlanPeriodo>('anual');
 
@@ -53,7 +56,7 @@ export function PaywallModal({
             transition={{ duration: 0.2 }}
             className="fixed inset-0 z-40"
             style={{ background: 'rgba(0,0,0,0.45)' }}
-            onClick={onCerrar}
+            onClick={forzado ? undefined : onCerrar}
             aria-hidden="true"
           />
 
@@ -94,15 +97,17 @@ export function PaywallModal({
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={onCerrar}
-                className="flex size-8 shrink-0 items-center justify-center rounded-full [touch-action:manipulation]"
-                style={{ background: 'color-mix(in oklab, var(--text-tertiary) 12%, transparent)' }}
-                aria-label="Cerrar"
-              >
-                <X size={15} color="var(--text-secondary)" strokeWidth={2} />
-              </button>
+              {!forzado && (
+                <button
+                  type="button"
+                  onClick={onCerrar}
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full [touch-action:manipulation]"
+                  style={{ background: 'color-mix(in oklab, var(--text-tertiary) 12%, transparent)' }}
+                  aria-label="Cerrar"
+                >
+                  <X size={15} color="var(--text-secondary)" strokeWidth={2} />
+                </button>
+              )}
             </div>
 
             {/* Beneficios */}

@@ -1,6 +1,6 @@
 # ESTADO — MANIFIESTA con Victoria
 
-> Última actualización: 2026-08-18 · Fase: Pre-Supabase ✅ COMPLETO — FICHA-ARTE + FICHA-MERCADO cerradas
+> Última actualización: 2026-08-19 · Fase: Producción — modelo de acceso trial/suscripción migrado a Supabase
 
 ---
 

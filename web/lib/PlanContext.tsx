@@ -1,35 +1,41 @@
 'use client';
 
-// PlanContext — estado de acceso basado en trial de 7 días + suscripción
+// PlanContext — fuente de verdad: Supabase (backend) + localStorage como cache efímero
 // Estados: trial_active | paid_active | trial_expired | subscription_inactive
 // Acceso completo: trial_active | paid_active
 // Gate (paywall): trial_expired | subscription_inactive
 //
-// En producción, el estado real viene del webhook de Hotmart + Supabase.
-// En LOCAL/MOCK: el trial arranca cuando el usuario llega a la app por primera vez.
+// REGLAS:
+//  • El trial arranca en el servidor la PRIMERA vez (POST /api/trial/start).
+//  • localStorage guarda el resultado del último fetch para evitar flash vacío en re-renders.
+//  • Hotmart webhook actualiza Supabase; el frontend relee en cada montaje y en foco.
+//  • Un reset local nunca reinicia el trial — el servidor lo ignora si ya existe.
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 export type AccesoEstado = 'trial_active' | 'paid_active' | 'trial_expired' | 'subscription_inactive';
 export type PlanPeriodo = 'mensual' | 'anual';
 
-const TRIAL_DIAS = 7;
-const KEY_TRIAL_START = 'manifiesta_trial_start';
-const KEY_ACCESO = 'manifiesta_acceso';
-const KEY_PERIODO = 'manifiesta_plan_periodo';
+// Cache key — solo para evitar flash en re-montajes; el backend siempre gana
+const CACHE_KEY = 'manifiesta_acceso_cache';
+
+interface AccesoCache {
+  acceso: AccesoEstado;
+  planPeriodo: PlanPeriodo | null;
+  diasTrialRestantes: number;
+  ts: number; // timestamp del fetch, ms
+}
 
 interface PlanContextValue {
   acceso: AccesoEstado;
-  /** true cuando la usuaria puede usar todas las funciones */
   hasAccess: boolean;
-  /** true si está en período de prueba activo */
   isTrial: boolean;
-  /** días restantes del trial (0 si no aplica) */
   diasTrialRestantes: number;
   planPeriodo: PlanPeriodo | null;
-  /** Llamado desde el webhook de Hotmart cuando el pago se confirma */
-  activarSuscripcion: (periodo: PlanPeriodo) => void;
-  /** Dev-only: resetea al estado inicial */
+  loading: boolean;
+  refetch: () => Promise<void>;
+  /** Dev-only — no reinicia el trial del servidor */
   resetAcceso: () => void;
 }
 
@@ -37,71 +43,125 @@ const PlanContext = createContext<PlanContextValue>({
   acceso: 'trial_active',
   hasAccess: true,
   isTrial: true,
-  diasTrialRestantes: TRIAL_DIAS,
+  diasTrialRestantes: 7,
   planPeriodo: null,
-  activarSuscripcion: () => {},
+  loading: true,
+  refetch: async () => {},
   resetAcceso: () => {},
 });
 
-function calcularEstado(trialStart: number | null, savedAcceso: string | null): AccesoEstado {
-  if (savedAcceso === 'paid_active') return 'paid_active';
-  if (savedAcceso === 'subscription_inactive') return 'subscription_inactive';
+// ── Leer cache local ──────────────────────────────────────────────────────
+function readCache(): AccesoCache | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as AccesoCache;
+  } catch { return null; }
+}
 
-  if (!trialStart) return 'trial_active';
-  const diasTranscurridos = Math.floor((Date.now() - trialStart) / (1000 * 60 * 60 * 24));
-  return diasTranscurridos < TRIAL_DIAS ? 'trial_active' : 'trial_expired';
+function writeCache(data: AccesoCache) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
+}
+
+function clearCache() {
+  try { localStorage.removeItem(CACHE_KEY); } catch {}
+}
+
+// ── Derivar días restantes desde trial_ends_at ISO ───────────────────────
+function calcDiasRestantes(trialEndsAt: string | null): number {
+  if (!trialEndsAt) return 0;
+  const diff = new Date(trialEndsAt).getTime() - Date.now();
+  return Math.max(0, Math.ceil(diff / 86_400_000));
 }
 
 export function PlanProvider({ children }: { children: ReactNode }) {
-  const [acceso, setAcceso] = useState<AccesoEstado>('trial_active');
-  const [planPeriodo, setPlanPeriodo] = useState<PlanPeriodo | null>(null);
-  const [trialStart, setTrialStart] = useState<number | null>(null);
+  const [state, setState] = useState<Omit<PlanContextValue, 'loading' | 'refetch' | 'resetAcceso'>>(() => {
+    // Seed desde cache para evitar flash
+    const cache = readCache();
+    return {
+      acceso: cache?.acceso ?? 'trial_active',
+      hasAccess: true,
+      isTrial: true,
+      diasTrialRestantes: cache?.diasTrialRestantes ?? 7,
+      planPeriodo: cache?.planPeriodo ?? null,
+    };
+  });
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const savedAcceso = localStorage.getItem(KEY_ACCESO);
-    const savedPeriodo = localStorage.getItem(KEY_PERIODO) as PlanPeriodo | null;
-    let savedTrialStart = localStorage.getItem(KEY_TRIAL_START)
-      ? Number(localStorage.getItem(KEY_TRIAL_START))
-      : null;
+  const fetchAcceso = useCallback(async () => {
+    const supabase = createClient();
 
-    // Iniciar trial si es primera vez
-    if (!savedTrialStart && savedAcceso !== 'paid_active') {
-      savedTrialStart = Date.now();
-      localStorage.setItem(KEY_TRIAL_START, String(savedTrialStart));
+    // 1. Verificar sesión activa
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      // No logueada → asumimos trial_active hasta que se loguee
+      setLoading(false);
+      return;
     }
 
-    setTrialStart(savedTrialStart);
-    if (savedPeriodo) setPlanPeriodo(savedPeriodo);
-    setAcceso(calcularEstado(savedTrialStart, savedAcceso));
-  }, []);
+    // 2. Leer user_settings desde Supabase (con RLS: solo puede leer la propia fila)
+    const { data: settings } = await supabase
+      .from('user_settings')
+      .select('access_status, plan_periodo, trial_ends_at')
+      .eq('user_id', session.user.id)
+      .maybeSingle();
 
-  const diasTrialRestantes = trialStart
-    ? Math.max(0, TRIAL_DIAS - Math.floor((Date.now() - trialStart) / (1000 * 60 * 60 * 24)))
-    : TRIAL_DIAS;
+    if (!settings) {
+      // Primera entrada: pedir al servidor que arranque el trial
+      await fetch('/api/trial/start', { method: 'POST' });
+      // Re-leer tras el arranque
+      const { data: fresh } = await supabase
+        .from('user_settings')
+        .select('access_status, plan_periodo, trial_ends_at')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
 
-  const activarSuscripcion = (periodo: PlanPeriodo) => {
-    setPlanPeriodo(periodo);
-    setAcceso('paid_active');
-    localStorage.setItem(KEY_ACCESO, 'paid_active');
-    localStorage.setItem(KEY_PERIODO, periodo);
-  };
+      if (fresh) applySettings(fresh);
+      setLoading(false);
+      return;
+    }
 
-  const resetAcceso = () => {
-    localStorage.removeItem(KEY_ACCESO);
-    localStorage.removeItem(KEY_PERIODO);
-    localStorage.removeItem(KEY_TRIAL_START);
-    const newStart = Date.now();
-    localStorage.setItem(KEY_TRIAL_START, String(newStart));
-    setTrialStart(newStart);
-    setPlanPeriodo(null);
-    setAcceso('trial_active');
-  };
+    applySettings(settings);
+    setLoading(false);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const hasAccess = acceso === 'trial_active' || acceso === 'paid_active';
-  const isTrial = acceso === 'trial_active';
+  function applySettings(s: {
+    access_status: string | null;
+    plan_periodo: string | null;
+    trial_ends_at: string | null;
+  }) {
+    const acceso = (s.access_status as AccesoEstado) ?? 'trial_active';
+    const planPeriodo = (s.plan_periodo as PlanPeriodo) ?? null;
+    const diasTrialRestantes = calcDiasRestantes(s.trial_ends_at);
+
+    const next = {
+      acceso,
+      hasAccess: acceso === 'trial_active' || acceso === 'paid_active',
+      isTrial: acceso === 'trial_active',
+      diasTrialRestantes,
+      planPeriodo,
+    };
+    setState(next);
+    writeCache({ ...next, ts: Date.now() });
+  }
+
+  useEffect(() => {
+    void fetchAcceso();
+
+    // Re-fetch cuando la ventana recupera el foco (usuario vuelve de Hotmart)
+    const onFocus = () => { void fetchAcceso(); };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [fetchAcceso]);
+
+  // Dev helper — limpia cache local sin tocar el servidor
+  const resetAcceso = useCallback(() => {
+    clearCache();
+    void fetchAcceso();
+  }, [fetchAcceso]);
 
   return (
-    <PlanContext.Provider value={{ acceso, hasAccess, isTrial, diasTrialRestantes, planPeriodo, activarSuscripcion, resetAcceso }}>
+    <PlanContext.Provider value={{ ...state, loading, refetch: fetchAcceso, resetAcceso }}>
       {children}
     </PlanContext.Provider>
   );
@@ -109,8 +169,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
 
 export const usePlan = () => useContext(PlanContext);
 
-// Compatibilidad: alias para código que aún no fue migrado
-// isPro = hasAccess (durante el trial también tienen acceso completo)
+// Alias de compatibilidad
 export function usePlanCompat() {
   const ctx = usePlan();
   return { ...ctx, isPro: ctx.hasAccess, plan: ctx.hasAccess ? (ctx.planPeriodo ?? 'pro') : 'free' };

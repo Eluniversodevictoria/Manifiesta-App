@@ -3,7 +3,7 @@
 // MANIFIESTA — Detalle de Biblioteca
 // Adaptativo por tipo: ritual / afirmacion / decreto / visualizacion / scripting-guiado / senal
 
-import { use, useEffect, useState } from 'react';
+import { use, useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
 import {
@@ -19,8 +19,51 @@ import Link from 'next/link';
 import { getById, TIPO_LABEL, TIPO_EMOJI } from '@/lib/biblioteca-types';
 import { useBiblioteca } from '@/lib/useBiblioteca';
 import { VictoriaAudioPlayer } from '@/components/VictoriaAudioPlayer';
+import type { AudioEstado } from '@/lib/manifestaciones-types';
 
 const EASE = [0.16, 1, 0.3, 1] as const;
+
+// ── Audio cache (module-level: sobrevive re-renders; sessionStorage: sobrevive navegación) ──────
+// Clave: item id · Valor: { url: blob URL, textHash, ts }
+const AUDIO_MEM: Map<string, { url: string; textHash: number }> = new Map();
+
+function hashText(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return h >>> 0;
+}
+
+function sessionKey(id: string) { return `manifiesta_audio_${id}`; }
+
+function loadFromSession(id: string, expectedHash: number): string | null {
+  try {
+    const raw = sessionStorage.getItem(sessionKey(id));
+    if (!raw) return null;
+    const parsed: { b64: string; textHash: number } = JSON.parse(raw);
+    if (parsed.textHash !== expectedHash) return null; // texto cambió → outdated
+    // Decodificar base64 → Blob → Object URL
+    const bytes = Uint8Array.from(atob(parsed.b64), (c) => c.charCodeAt(0));
+    const blob = new Blob([bytes], { type: 'audio/mpeg' });
+    return URL.createObjectURL(blob);
+  } catch {
+    return null;
+  }
+}
+
+function saveToSession(id: string, buffer: ArrayBuffer, textHash: number) {
+  try {
+    const bytes = new Uint8Array(buffer);
+    let b64 = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      b64 += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+    }
+    b64 = btoa(b64);
+    sessionStorage.setItem(sessionKey(id), JSON.stringify({ b64, textHash }));
+  } catch {
+    // sessionStorage lleno — ignorar
+  }
+}
 
 
 // ── Bloque de paso numerado ───────────────────────────────────────────────
@@ -33,12 +76,12 @@ function PasoItem({ numero, texto }: { numero: number; texto: string }) {
       className="flex gap-3"
     >
       <div
-        className="flex size-7 shrink-0 items-center justify-center rounded-full text-[12px] font-bold"
+        className="flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold"
         style={{ background: 'color-mix(in oklab, var(--accent) 12%, transparent)', color: 'var(--accent)' }}
       >
         {numero}
       </div>
-      <p className="flex-1 pt-0.5 text-[14px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+      <p className="flex-1 pt-0.5 text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
         {texto}
       </p>
     </motion.div>
@@ -74,14 +117,14 @@ function CampoBloque({
       <div className="flex items-center gap-1.5">
         {icono}
         <span
-          className="text-[11px] font-semibold uppercase tracking-[0.06em]"
+          className="text-xs font-semibold uppercase tracking-[0.06em]"
           style={{ color: acento ? 'var(--accent)' : 'var(--text-tertiary)' }}
         >
           {etiqueta}
         </span>
       </div>
       <p
-        className="text-[14px] leading-relaxed"
+        className="text-sm leading-relaxed"
         style={{ color: acento ? 'var(--text-primary)' : 'var(--text-secondary)', fontStyle: acento ? 'italic' : 'normal' }}
       >
         {texto}
@@ -146,7 +189,7 @@ function ContadorRepeticiones() {
       <div className="flex items-center gap-2">
         <Repeat2 size={14} color={completado ? 'var(--accent)' : 'var(--text-tertiary)'} strokeWidth={2} />
         <p
-          className="text-[12px] font-semibold uppercase tracking-[0.05em]"
+          className="text-xs font-semibold uppercase tracking-[0.05em]"
           style={{ color: completado ? 'var(--accent)' : 'var(--text-tertiary)' }}
         >
           {completado ? '¡Completaste las 3 repeticiones!' : `Repetir ${meta} veces`}
@@ -186,7 +229,7 @@ function ContadorRepeticiones() {
           type="button"
           whileTap={{ scale: 0.95 }}
           onClick={() => setCount((c) => Math.min(c + 1, meta))}
-          className="flex h-10 items-center gap-2 rounded-full px-5 text-[13px] font-semibold text-white [touch-action:manipulation]"
+          className="flex h-10 items-center gap-2 rounded-full px-5 text-sm font-semibold text-white [touch-action:manipulation]"
           style={{ background: 'var(--accent)' }}
         >
           <Repeat2 size={13} strokeWidth={2.5} />
@@ -208,9 +251,82 @@ export default function BibliotecaDetallePage({
   const { esGuardado, toggleGuardado, registrarVisto, preferencia } = useBiblioteca();
   const item = getById(id);
 
+  // ── Estado de audio local (independiente del catálogo estático) ───────────
+  const catalogEstado = item?.audioEstado ?? 'none';
+  const canHaveAudio = catalogEstado !== 'none';
+  const textHash = item ? hashText(item.textContent) : 0;
+
+  const [audioEstado, setAudioEstado] = useState<AudioEstado>(() => {
+    // Determinar estado inicial síncrono
+    if (!canHaveAudio) return 'none';
+    // Comprobar memory cache
+    const mem = AUDIO_MEM.get(id);
+    if (mem && mem.textHash === textHash) return 'ready';
+    return 'placeholder';
+  });
+  const [audioUrl, setAudioUrl] = useState<string | undefined>(() => {
+    const mem = AUDIO_MEM.get(id);
+    if (mem && mem.textHash === textHash) return mem.url;
+    return undefined;
+  });
+
+  // generando ref para evitar doble-llamada concurrente
+  const generatingRef = useRef(false);
+
+  // En mount: intentar restaurar desde sessionStorage si no está en memoria
+  useEffect(() => {
+    if (!canHaveAudio) return;
+    if (audioEstado === 'ready') return; // ya tenemos desde memoria
+    const url = loadFromSession(id, textHash);
+    if (url) {
+      AUDIO_MEM.set(id, { url, textHash });
+      setAudioUrl(url);
+      setAudioEstado('ready');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (id) registrarVisto(id);
   }, [id, registrarVisto]);
+
+  const handleRequestGenerate = useCallback(async () => {
+    if (!item || generatingRef.current) return;
+    generatingRef.current = true;
+    setAudioEstado('generating');
+
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: item.textContent }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`TTS error ${res.status}`);
+      }
+
+      const buffer = await res.arrayBuffer();
+
+      // Guardar en sessionStorage para persistir entre navegaciones
+      saveToSession(id, buffer, textHash);
+
+      // Crear blob URL para reproducción inmediata
+      const blob = new Blob([buffer], { type: 'audio/mpeg' });
+      const url = URL.createObjectURL(blob);
+
+      // Guardar en memoria para reutilización en misma sesión
+      AUDIO_MEM.set(id, { url, textHash });
+
+      setAudioUrl(url);
+      setAudioEstado('ready');
+    } catch (err) {
+      console.error('[biblioteca audio]', err);
+      setAudioEstado('error');
+    } finally {
+      generatingRef.current = false;
+    }
+  }, [id, item, textHash]);
 
   if (!item) {
     return (
@@ -222,12 +338,12 @@ export default function BibliotecaDetallePage({
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
         </div>
-        <p className="text-[17px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+        <p className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
           Contenido no encontrado
         </p>
         <Link
           href="/app/biblioteca"
-          className="text-[14px] font-medium"
+          className="text-sm font-medium"
           style={{ color: 'var(--accent)' }}
         >
           Volver a la Biblioteca
@@ -262,7 +378,7 @@ export default function BibliotecaDetallePage({
         </button>
 
         <span
-          className="flex items-center gap-1.5 text-[13px] font-semibold"
+          className="flex items-center gap-1.5 text-sm font-semibold"
           style={{ color: 'var(--text-secondary)' }}
         >
           <span aria-hidden="true">{TIPO_EMOJI[item.tipo]}</span>
@@ -300,33 +416,22 @@ export default function BibliotecaDetallePage({
           className="flex flex-col gap-2"
         >
           <div className="flex items-center gap-2">
-            <span className="text-[13px]" style={{ color: 'var(--text-tertiary)' }}>
+            <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
               {item.categoriaEmoji} {item.categoria}
             </span>
             <span style={{ color: 'var(--text-tertiary)' }}>·</span>
-            <span className="flex items-center gap-1 text-[13px]" style={{ color: 'var(--text-tertiary)' }}>
+            <span className="flex items-center gap-1 text-sm" style={{ color: 'var(--text-tertiary)' }}>
               <Clock size={11} strokeWidth={1.8} aria-hidden="true" />
               {item.duracionMin} min
             </span>
-            {item.premium && (
-              <span
-                className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
-                style={{
-                  background: 'color-mix(in oklab, var(--accent) 12%, transparent)',
-                  color: 'color-mix(in oklab, var(--accent) 70%, var(--text-secondary))',
-                }}
-              >
-                ✦ Premium
-              </span>
-            )}
           </div>
           <h1
-            className="text-[22px] font-bold leading-snug tracking-[-0.025em]"
+            className="text-xl font-bold leading-snug tracking-tight"
             style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
           >
             {item.titulo}
           </h1>
-          <p className="text-[14px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
             {item.descripcionCorta}
           </p>
         </motion.div>
@@ -351,7 +456,7 @@ export default function BibliotecaDetallePage({
               borderLeft: '3px solid var(--accent)',
             }}
           >
-            <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
               <span className="font-semibold" style={{ color: 'var(--accent)' }}>
                 Antes de comenzar:{' '}
               </span>
@@ -360,19 +465,23 @@ export default function BibliotecaDetallePage({
           </motion.div>
         )}
 
-        {/* Audio */}
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.28, delay: 0.1 }}
-        >
-          <VictoriaAudioPlayer
-            audioEstado={item.audioEstado ?? 'placeholder'}
-            audioDurationSec={item.audioDurationSec}
-            preferencia={preferencia}
-            label={`Escuchar: ${item.titulo}`}
-          />
-        </motion.div>
+        {/* ── AUDIO PLAYER — solo para items con capacidad de audio ── */}
+        {canHaveAudio && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.28, delay: 0.1 }}
+          >
+            <VictoriaAudioPlayer
+              audioEstado={audioEstado}
+              audioUrl={audioUrl}
+              audioDurationSec={item.audioDurationSec}
+              preferencia={preferencia}
+              label={`Escuchar: ${item.titulo}`}
+              onRequestGenerate={handleRequestGenerate}
+            />
+          </motion.div>
+        )}
 
         {/* Texto principal */}
         <motion.div
@@ -400,7 +509,7 @@ export default function BibliotecaDetallePage({
             </p>
           ) : (
             <p
-              className="whitespace-pre-line text-[14px] leading-relaxed"
+              className="whitespace-pre-line text-sm leading-relaxed"
               style={{ color: 'var(--text-secondary)' }}
             >
               {item.textContent}
@@ -458,7 +567,7 @@ export default function BibliotecaDetallePage({
             className="flex flex-col gap-3"
           >
             <h2
-              className="text-[12px] font-semibold uppercase tracking-[0.05em]"
+              className="text-xs font-semibold uppercase tracking-[0.05em]"
               style={{ color: 'var(--text-tertiary)' }}
             >
               {item.tipo === 'scripting-guiado' ? 'Guía paso a paso' : 'El ritual'}
@@ -491,13 +600,13 @@ export default function BibliotecaDetallePage({
             }}
           >
             <p
-              className="text-[11px] font-semibold uppercase tracking-[0.06em] mb-2"
+              className="text-xs font-semibold uppercase tracking-[0.06em] mb-2"
               style={{ color: 'var(--accent)' }}
             >
               Afirmación final
             </p>
             <p
-              className="text-[14px] leading-relaxed"
+              className="text-sm leading-relaxed"
               style={{
                 color: 'var(--text-primary)',
                 fontFamily: 'var(--font-display)',
@@ -530,12 +639,12 @@ export default function BibliotecaDetallePage({
             </div>
             <div>
               <p
-                className="text-[11px] font-semibold uppercase tracking-[0.05em] mb-1"
+                className="text-xs font-semibold uppercase tracking-[0.05em] mb-1"
                 style={{ color: 'var(--text-tertiary)' }}
               >
                 Tu acción de hoy
               </p>
-              <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
                 {item.accionDespues}
               </p>
             </div>
@@ -551,7 +660,7 @@ export default function BibliotecaDetallePage({
           >
             <Link
               href={`/app/scripting?intencion=${item.categoria.toLowerCase()}`}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-[15px] font-semibold text-white [touch-action:manipulation]"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-base font-semibold text-white [touch-action:manipulation]"
               style={{ background: 'var(--accent)' }}
             >
               <Sparkles size={16} strokeWidth={2} aria-hidden="true" />
@@ -571,7 +680,7 @@ export default function BibliotecaDetallePage({
             {item.tags.map((tag) => (
               <span
                 key={tag}
-                className="rounded-full px-3 py-1 text-[12px]"
+                className="rounded-full px-3 py-1 text-xs"
                 style={{
                   background: 'color-mix(in oklab, var(--text-tertiary) 10%, transparent)',
                   color: 'var(--text-tertiary)',

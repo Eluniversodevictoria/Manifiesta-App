@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { Resend } from 'resend';
+import { enviarEmail, getUserEmail } from '@/lib/email/send';
+import {
+  emailSuscripcionActivada,
+  emailCancelacion,
+  emailReembolso,
+} from '@/lib/email/templates';
 
 function getSupabaseAdmin() {
   return createClient(
@@ -9,7 +14,6 @@ function getSupabaseAdmin() {
   );
 }
 
-// Eventos Hotmart que activan o revocan acceso
 const EVENTOS_APROBADO = new Set([
   'PURCHASE_APPROVED',
   'PURCHASE_REACTIVATED',
@@ -21,6 +25,14 @@ const EVENTOS_REVOCADO = new Set([
   'PURCHASE_CHARGEBACK',
   'SUBSCRIPTION_CANCELLED',
 ]);
+const EVENTOS_CANCELACION = new Set([
+  'PURCHASE_CANCELLED',
+  'SUBSCRIPTION_CANCELLED',
+]);
+const EVENTOS_REEMBOLSO = new Set([
+  'PURCHASE_REFUNDED',
+  'PURCHASE_CHARGEBACK',
+]);
 
 interface HotmartPayload {
   hottok?: string;
@@ -31,20 +43,21 @@ interface HotmartPayload {
       transaction: string;
       offer?: { code?: string };
       recurrence_number?: number;
+      subscription_id?: string;
     };
     product?: { id?: string };
-    subscription?: { plan?: { recurrenceType?: string } };
+    subscription?: {
+      plan?: { recurrenceType?: string };
+      subscriber?: { code?: string };
+    };
     commissions?: { value?: { amount?: number; currency?: { code?: string } } }[];
   };
 }
 
 export async function POST(req: NextRequest) {
   const supabaseAdmin = getSupabaseAdmin();
-  const resend = new Resend(process.env.RESEND_API_KEY);
   const HOTTOK = process.env.HOTMART_HOTTOK ?? '';
   const PRODUCT_ID = process.env.HOTMART_PRODUCT_ID ?? '';
-  const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'MANIFIESTA <manifiesta.app@mail.com>';
-  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://manifiesta.app';
 
   let body: HotmartPayload;
   try {
@@ -70,15 +83,14 @@ export async function POST(req: NextRequest) {
   const esAprobado = EVENTOS_APROBADO.has(event);
   const esRevocado = EVENTOS_REVOCADO.has(event);
   if (!esAprobado && !esRevocado) {
-    // Evento no relevante — aceptamos y salimos
     return NextResponse.json({ ok: true, ignored: true });
   }
 
-  // 2. Determinar periodo
+  // 2. Periodo
   const recurrenceType = data.subscription?.plan?.recurrenceType ?? '';
-  const planPeriodo = recurrenceType.toLowerCase().includes('annual') ? 'anual' : 'mensual';
+  const planPeriodo: 'mensual' | 'anual' = recurrenceType.toLowerCase().includes('annual') ? 'anual' : 'mensual';
 
-  // 3. Idempotencia — si ya procesamos este transactionId, salimos
+  // 3. Idempotencia
   const { data: existing } = await supabaseAdmin
     .from('hotmart_orders')
     .select('id, status')
@@ -91,9 +103,10 @@ export async function POST(req: NextRequest) {
 
   // 4. Buscar usuario por email
   const { data: usersData } = await supabaseAdmin.auth.admin.listUsers();
-  const authUser = usersData?.users?.find(u => u.email?.toLowerCase() === email);
+  const authUser = usersData?.users?.find((u) => u.email?.toLowerCase() === email);
 
   // 5. Registrar orden
+  const subscriptionId = data.purchase?.subscription_id ?? data.subscription?.subscriber?.code ?? null;
   await supabaseAdmin.from('hotmart_orders').upsert({
     hotmart_order_id: transactionId,
     buyer_email: email,
@@ -109,55 +122,59 @@ export async function POST(req: NextRequest) {
     hotmart_payload: data,
   }, { onConflict: 'hotmart_order_id' });
 
-  // 6. Actualizar plan del usuario (si existe la cuenta)
+  // 6. Actualizar acceso en user_settings
   if (authUser) {
-    await supabaseAdmin.from('user_settings').upsert({
-      user_id: authUser.id,
-      plan: esAprobado ? 'pro' : 'free',
-      plan_periodo: esAprobado ? planPeriodo : null,
-      plan_activado_at: esAprobado ? new Date().toISOString() : null,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id' });
+    if (esAprobado) {
+      await supabaseAdmin.from('user_settings').upsert({
+        user_id: authUser.id,
+        access_status: 'paid_active',
+        plan_periodo: planPeriodo,
+        hotmart_subscription_id: subscriptionId,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
+    } else {
+      await supabaseAdmin.from('user_settings').upsert({
+        user_id: authUser.id,
+        access_status: 'subscription_inactive',
+        plan_periodo: null,
+        hotmart_subscription_id: null,
+        cancelled_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
+    }
   }
 
-  // 7. Email de bienvenida (solo en primera compra aprobada)
-  const esNueva = !existing && esAprobado && (data.purchase.recurrence_number ?? 1) === 1;
-  if (esNueva && process.env.RESEND_API_KEY) {
-    await resend.emails.send({
-      from: FROM_EMAIL,
-      to: email,
-      subject: '✨ ¡Tu acceso a MANIFIESTA está activo!',
-      html: emailBienvenida(data.buyer.name ?? 'amor', APP_URL),
-    }).catch(() => {}); // best-effort
+  // 7. Emails — best-effort, no bloquea respuesta a Hotmart
+  if (authUser) {
+    const user = await getUserEmail(authUser.id);
+    const nombre = user?.name ?? data.buyer.name ?? 'amor';
+    const emailTo = user?.email ?? email;
+    const uid = authUser.id;
+
+    if (esAprobado) {
+      const esNueva = !existing && (data.purchase.recurrence_number ?? 1) === 1;
+      if (esNueva) {
+        const tpl = emailSuscripcionActivada(nombre, planPeriodo);
+        void enviarEmail({ to: emailTo, subject: tpl.subject, html: tpl.html, tipo: 'subscription_activated', userId: uid });
+      }
+    } else if (EVENTOS_CANCELACION.has(event)) {
+      const tpl = emailCancelacion(nombre);
+      void enviarEmail({ to: emailTo, subject: tpl.subject, html: tpl.html, tipo: 'cancellation', userId: uid });
+    } else if (EVENTOS_REEMBOLSO.has(event)) {
+      const tpl = emailReembolso(nombre);
+      void enviarEmail({ to: emailTo, subject: tpl.subject, html: tpl.html, tipo: 'refund', userId: uid });
+    }
+  } else {
+    // Usuario no existe todavía (compró antes de registrarse) — email con nombre de Hotmart
+    const nombre = data.buyer.name ?? 'amor';
+    if (esAprobado) {
+      const tpl = emailSuscripcionActivada(nombre, planPeriodo);
+      // No tenemos userId — usamos el email como identificador provisional
+      const transport = (await import('@/lib/email/gmail')).getGmailTransport();
+      const { FROM } = await import('@/lib/email/gmail');
+      await transport.sendMail({ from: FROM, to: email, subject: tpl.subject, html: tpl.html }).catch(() => {});
+    }
   }
 
   return NextResponse.json({ ok: true });
-}
-
-function emailBienvenida(nombre: string, appUrl: string): string {
-  return `
-<!DOCTYPE html>
-<html lang="es">
-<body style="font-family:Georgia,serif;background:#FEF7F8;margin:0;padding:40px 20px;color:#22141A;">
-  <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:16px;padding:40px;border:1px solid #F2C4C4;">
-    <h1 style="font-size:26px;color:#C4748A;margin:0 0 16px;">✨ ¡Ya eres parte de MANIFIESTA!</h1>
-    <p style="font-size:16px;line-height:1.6;margin:0 0 24px;">
-      Hola ${nombre},<br><br>
-      Tu acceso está activo. Victoria te espera dentro con tu primera práctica del día. ✨
-    </p>
-    <a href="${appUrl}/entrar"
-       style="display:inline-block;background:#C4748A;color:#fff;text-decoration:none;padding:14px 28px;border-radius:10px;font-size:16px;font-weight:600;">
-      Entrar a MANIFIESTA
-    </a>
-    <p style="font-size:13px;color:#A87888;margin:32px 0 0;line-height:1.5;">
-      Si tienes dudas, escríbenos a
-      <a href="mailto:manifiesta.app@mail.com" style="color:#C4748A;">manifiesta.app@mail.com</a>
-      — respondemos en menos de 24 horas.
-    </p>
-    <p style="font-size:12px;color:#A87888;margin:16px 0 0;">
-      Puedes gestionar tu suscripción en tu portal de Hotmart en cualquier momento.
-    </p>
-  </div>
-</body>
-</html>`;
 }
