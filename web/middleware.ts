@@ -1,23 +1,45 @@
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
-
-const SUPABASE_CONFIGURED =
-  !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
-  !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Sin credenciales de Supabase (dev sin .env.local): pasar todo sin tocar
-  if (!SUPABASE_CONFIGURED) {
+  // Sin credenciales: pasar sin tocar (dev sin .env.local)
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
     return NextResponse.next({ request });
   }
 
-  const { updateSession } = await import('@/lib/supabase/middleware');
-  const { supabaseResponse, user } = await updateSession(request);
+  let supabaseResponse = NextResponse.next({ request });
 
-  // Rutas que requieren sesión activa
-  const protectedPrefixes = ['/app', '/admin'];
-  const isProtected = protectedPrefixes.some((p) => pathname.startsWith(p));
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Rutas protegidas
+  const isProtected =
+    pathname.startsWith('/app') || pathname.startsWith('/admin');
 
   if (isProtected && !user) {
     const loginUrl = request.nextUrl.clone();
@@ -26,7 +48,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirigir usuario ya logueado fuera de /entrar
+  // Usuario ya logueado → fuera de /entrar
   if (pathname === '/entrar' && user) {
     const appUrl = request.nextUrl.clone();
     appUrl.pathname = '/app';
