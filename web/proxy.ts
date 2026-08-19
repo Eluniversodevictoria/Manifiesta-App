@@ -1,10 +1,9 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Sin credenciales: pasar sin tocar (dev sin .env.local)
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -37,7 +36,6 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Rutas protegidas
   const isProtected =
     pathname.startsWith('/app') || pathname.startsWith('/admin');
 
@@ -48,7 +46,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Usuario ya logueado → fuera de /entrar
   if (pathname === '/entrar' && user) {
     const appUrl = request.nextUrl.clone();
     appUrl.pathname = '/app';
