@@ -26,6 +26,41 @@ import {
 import type { PreferenciaMedia, AudioEstado } from '@/lib/manifestaciones-types';
 import { VictoriaAudioPlayer } from '@/components/VictoriaAudioPlayer';
 
+// ── Intención diaria rotativa (determinista por día del mes) ──────────────────
+const INTENCIONES_DIARIAS = [
+  'Hoy elijo confiar en que todo llega en el momento perfecto.',
+  'Mi energía es un imán para lo que deseo.',
+  'Lo que busco ya me está buscando a mí.',
+  'Hoy abro espacio para recibir lo que el universo tiene para mí.',
+  'Soy merecedora de todo lo bueno que llega a mi vida.',
+  'La abundancia fluye a través de mí naturalmente.',
+  'Confío en el proceso y suelto el control.',
+  'Mis deseos son semillas que ya están creciendo.',
+  'Hoy actúo desde la certeza, no desde el miedo.',
+  'El universo conspira siempre a mi favor.',
+  'Me permito recibir con gratitud y sin resistencia.',
+  'Cada día me acerco más a lo que me pertenece.',
+  'Soy abundancia en movimiento.',
+  'Lo mejor está por llegar — y ya está en camino.',
+  'Hoy vibro en la frecuencia de lo que deseo.',
+  'Mi fe es más grande que cualquier duda.',
+  'Recibo con amor todo lo que el universo me da.',
+  'Hoy me elijo a mí y a mis sueños más grandes.',
+  'La prosperidad es mi estado natural.',
+  'Confío en que ya está hecho — solo tengo que recibirlo.',
+  'Hoy suelto lo que no me sirve y abrazo lo que viene.',
+  'Soy canal de todo lo bueno que existe.',
+  'Mi corazón sabe el camino — solo tengo que seguirlo.',
+  'Hoy celebro cada pequeño paso hacia mis deseos.',
+  'Lo que deseo con claridad ya existe en el universo.',
+  'Soy imán de milagros y oportunidades.',
+  'Hoy actúo, confío y doy gracias de antemano.',
+  'El universo siempre me da exactamente lo que necesito.',
+  'Mis deseos y yo somos uno solo.',
+  'Hoy es el día perfecto para manifestar.',
+  'Todo lo que necesito ya está dentro de mí.',
+];
+
 // ── Iconos por categoría ──────────────────────────────────────────────────────
 const ICONO_CAT: Record<string, LucideIcon> = {
   Dinero: Banknote,
@@ -724,6 +759,36 @@ function InicioContent() {
 
       <div className="flex flex-col gap-4 px-5">
 
+        {/* ── CAPA EMOCIONAL — intención del día ── */}
+        {(() => {
+          const diaIndex = new Date().getDate() % INTENCIONES_DIARIAS.length;
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.38, ease: EASE }}
+              className="rounded-[var(--radius-card)] px-5 py-5"
+              style={{
+                background: 'var(--surface)',
+                border: '1px solid color-mix(in oklab, var(--accent) 16%, transparent)',
+              }}
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.06em]" style={{ color: 'var(--accent)' }}>
+                Tu intención de hoy
+              </p>
+              <p
+                className="mt-2 text-base font-semibold leading-snug"
+                style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
+              >
+                {INTENCIONES_DIARIAS[diaIndex]}
+              </p>
+              <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Lleva esta energía a tu práctica de hoy.
+              </p>
+            </motion.div>
+          );
+        })()}
+
         {/* ── EMPTY STATE ── */}
         {activas.length === 0 && (
           <motion.div
@@ -1219,6 +1284,43 @@ function InicioContent() {
 
         </>)}
 
+        {/* ── PARA TI HOY — accesos rápidos ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.32 }}
+        >
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.06em]" style={{ color: 'var(--text-tertiary)' }}>
+            Para ti hoy
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { icon: Sparkles, label: 'Afirmación', href: '/app/scripting?intencion=gratitud' },
+              { icon: Moon,     label: 'Visualización', href: '/app/scripting?intencion=bienestar' },
+              { icon: PenLine,  label: 'Scripting', href: '/app/scripting' },
+            ].map(({ icon: Ico, label, href }) => (
+              <Link
+                key={href}
+                href={href}
+                className="flex flex-col items-center gap-2 rounded-[var(--radius-card)] px-2 py-4 text-center [touch-action:manipulation]"
+                style={{
+                  background: 'var(--surface)',
+                  border: '1px solid color-mix(in oklab, var(--text-tertiary) 16%, transparent)',
+                }}
+              >
+                <span
+                  className="flex size-10 items-center justify-center rounded-xl"
+                  style={{ background: 'color-mix(in oklab, var(--accent) 10%, transparent)' }}
+                  aria-hidden="true"
+                >
+                  <Ico size={18} color="var(--accent)" strokeWidth={1.8} />
+                </span>
+                <span className="text-xs font-medium leading-tight" style={{ color: 'var(--text-primary)' }}>{label}</span>
+              </Link>
+            ))}
+          </div>
+        </motion.div>
+
         {/* ── SEPARADOR DE MARCA ── */}
         <div className="flex items-center justify-center py-1" aria-hidden="true">
           <span style={{ color: 'var(--accent)', opacity: 0.3, fontSize: 10, letterSpacing: '0.4em' }}>✦ ✦ ✦</span>
@@ -1259,7 +1361,7 @@ function InicioContent() {
           transition={{ duration: 0.3, delay: 0.38 }}
           className="pb-28"
         >
-          {isPro ? (
+          {true && (
             <button
               type="button"
               onClick={abrirSheetUrgente}
@@ -1287,10 +1389,11 @@ function InicioContent() {
               </div>
               <ChevronRight size={16} color="var(--text-tertiary)" aria-hidden="true" />
             </button>
-          ) : (
+          )}
+          {false && (
             <button
               type="button"
-              onClick={() => setShowPaywall(true)}
+              onClick={() => {}}
               className="flex w-full items-center gap-4 rounded-[var(--radius-card)] p-4 [touch-action:manipulation]"
               style={{
                 background: 'var(--surface)',
@@ -1309,12 +1412,6 @@ function InicioContent() {
                   <p className="text-sm font-semibold" style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-display)' }}>
                     Necesito manifestar ahora…
                   </p>
-                  <span
-                    className="rounded-full px-2 py-0.5 text-xs font-bold"
-                    style={{ background: 'var(--chip-bg)', color: 'var(--accent)' }}
-                  >
-                    Pro
-                  </span>
                 </div>
                 <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
                   Práctica al momento · Solo en el plan Pro

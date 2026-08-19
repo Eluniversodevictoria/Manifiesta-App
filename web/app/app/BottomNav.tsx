@@ -2,16 +2,12 @@
 
 // BottomNav — 5 tabs con botón ✦ central elevado
 // Inicio · Manifestaciones · ✦ · Biblioteca · Perfil
-// El ✦ abre SheetUrgente (Necesito manifestar…) — exclusivo Pro.
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Sparkles, Heart, BookOpen, User } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useSheetUrgente } from '@/lib/SheetUrgenteContext';
-import { usePlan } from '@/lib/PlanContext';
-import { PaywallModal } from '@/components/PaywallModal';
 
 const TABS_IZQ = [
   { href: '/app',                  label: 'Inicio',         Icon: Sparkles },
@@ -26,17 +22,11 @@ const TABS_DER = [
 export function BottomNav() {
   const pathname = usePathname();
   const { abrir } = useSheetUrgente();
-  const { isPro } = usePlan();
-  const [showPaywall, setShowPaywall] = useState(false);
 
   const esActivo = (href: string) => {
     if (href === '/app') return pathname === '/app';
     if (href === '/app/perfil') return pathname.startsWith('/app/perfil') || pathname.startsWith('/app/historial');
     return pathname.startsWith(href);
-  };
-
-  const handleCentral = () => {
-    if (isPro) { abrir(); } else { setShowPaywall(true); }
   };
 
   return (
@@ -81,7 +71,7 @@ export function BottomNav() {
       <div className="flex flex-1 items-center justify-center">
         <motion.button
           type="button"
-          onClick={handleCentral}
+          onClick={abrir}
           aria-label="Manifestar ahora"
           whileTap={{ scale: 0.93 }}
           transition={{ type: 'spring', stiffness: 380, damping: 30 }}
@@ -121,13 +111,6 @@ export function BottomNav() {
         );
       })}
     </nav>
-
-    <PaywallModal
-      abierto={showPaywall}
-      onCerrar={() => setShowPaywall(false)}
-      titulo='Práctica "Necesito manifestar…"'
-      descripcion="Práctica al instante para lo que necesitas ahora. Exclusivo Pro."
-    />
     </>
   );
 }
