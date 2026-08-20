@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { enviarEmail, getUserEmail } from '@/lib/email/send';
 import { emailTrialD7 } from '@/lib/email/templates';
+import { sendPushNotification } from '@/lib/push';
 
 // GET /api/cron/trial-d7 — día 7: aviso de que expira mañana
 export async function GET(req: NextRequest) {
@@ -27,6 +28,8 @@ export async function GET(req: NextRequest) {
     .lte('trial_started_at', to.toISOString());
 
   let enviados = 0;
+  const userIds: string[] = [];
+
   for (const { user_id } of usuarios ?? []) {
     const user = await getUserEmail(user_id);
     if (!user) continue;
@@ -38,7 +41,17 @@ export async function GET(req: NextRequest) {
       tipo: 'trial_d7',
       userId: user_id,
     });
-    if (ok) enviados++;
+    if (ok) { enviados++; userIds.push(user_id); }
+  }
+
+  // Push complementario al email
+  if (userIds.length > 0) {
+    await sendPushNotification({
+      title: '⏳ Tu acceso completo termina mañana',
+      body: 'No pierdas tu práctica diaria con Victoria.',
+      url: '/onboarding/paywall',
+      user_ids: userIds,
+    });
   }
 
   return NextResponse.json({ ok: true, enviados });

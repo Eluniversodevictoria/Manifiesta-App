@@ -138,7 +138,8 @@ export default function PerfilPage() {
   const router = useRouter();
   const reduced = useReducedMotion();
   const { manifestaciones } = useManifestaciones();
-  const [notif, setNotif] = useState(true);
+  const [notifStatus, setNotifStatus] = useState<'unknown' | 'granted' | 'denied' | 'loading'>('unknown');
+const [pushSupported, setPushSupported] = useState(false);
   const [cerrandoSesion, setCerrandoSesion] = useState(false);
 
   const EASE = [0.16, 1, 0.3, 1] as const;
@@ -164,6 +165,45 @@ export default function PerfilPage() {
   const [confirmarEliminar, setConfirmarEliminar] = useState(false);
   const [eliminando, setEliminando] = useState(false);
   const [nombreUsuario, setNombreUsuario] = useState<string>('');
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      setPushSupported(true);
+      if (Notification.permission === 'granted') setNotifStatus('granted');
+      else if (Notification.permission === 'denied') setNotifStatus('denied');
+    }
+  }, []);
+
+  const handleActivarNotificaciones = async () => {
+    setNotifStatus('loading');
+    try {
+      function urlBase64ToUint8Array(b64: string) {
+        const padding = '='.repeat((4 - (b64.length % 4)) % 4);
+        const base64 = (b64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const raw = window.atob(base64);
+        return new Uint8Array([...raw].map((c) => c.charCodeAt(0)));
+      }
+      const reg = await navigator.serviceWorker.register('/sw.js');
+      await navigator.serviceWorker.ready;
+      const existing = await reg.pushManager.getSubscription();
+      if (existing) { setNotifStatus('granted'); return; }
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(
+          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
+        ),
+      });
+      const json = sub.toJSON();
+      await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: json.endpoint, keys: json.keys }),
+      });
+      setNotifStatus('granted');
+    } catch {
+      setNotifStatus(Notification.permission === 'denied' ? 'denied' : 'unknown');
+    }
+  };
 
   useEffect(() => {
     const supabase = createClient();
@@ -347,35 +387,47 @@ export default function PerfilPage() {
         </motion.div>
 
         {/* ── PREFERENCIAS ── */}
-        <motion.div variants={reduced ? {} : staggerItem}>
-          <Seccion titulo="Preferencias">
-            {/* Notificaciones — toggle */}
-            <div className="flex items-center gap-3 px-4 py-3.5">
-              <span
-                className="flex size-8 shrink-0 items-center justify-center rounded-xl"
-                style={{ background: 'color-mix(in oklab, var(--text-tertiary) 10%, transparent)' }}
-              >
-                <Bell size={15} color="var(--text-secondary)" strokeWidth={1.8} />
-              </span>
-              <span className="flex-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                Recordatorio diario
-              </span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={notif}
-                onClick={() => setNotif((v) => !v)}
-                className="relative h-6 w-12 rounded-full transition-colors duration-200 [touch-action:manipulation]"
-                style={{ background: notif ? 'var(--accent)' : 'color-mix(in oklab, var(--text-tertiary) 30%, transparent)' }}
-              >
+        {pushSupported && (
+          <motion.div variants={reduced ? {} : staggerItem}>
+            <Seccion titulo="Preferencias">
+              <div className="flex items-center gap-3 px-4 py-3.5">
                 <span
-                  className="absolute top-1 size-4 rounded-full bg-white shadow transition-transform duration-200"
-                  style={{ left: notif ? '23px' : '3px' }}
-                />
-              </button>
-            </div>
-          </Seccion>
-        </motion.div>
+                  className="flex size-8 shrink-0 items-center justify-center rounded-xl"
+                  style={{ background: notifStatus === 'granted'
+                    ? 'color-mix(in oklab, var(--accent) 12%, transparent)'
+                    : 'color-mix(in oklab, var(--text-tertiary) 10%, transparent)' }}
+                >
+                  <Bell size={15} color={notifStatus === 'granted' ? 'var(--accent)' : 'var(--text-secondary)'} strokeWidth={1.8} />
+                </span>
+                <div className="flex-1">
+                  <span className="block text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    Recordatorio diario
+                  </span>
+                  {notifStatus === 'denied' && (
+                    <span className="block text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                      Bloqueadas en este dispositivo
+                    </span>
+                  )}
+                </div>
+                {notifStatus === 'granted' ? (
+                  <span className="text-xs font-medium" style={{ color: 'var(--accent)' }}>Activas</span>
+                ) : notifStatus === 'denied' ? (
+                  <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Bloqueadas</span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleActivarNotificaciones}
+                    disabled={notifStatus === 'loading'}
+                    className="rounded-xl px-3 py-1.5 text-xs font-semibold [touch-action:manipulation]"
+                    style={{ background: 'color-mix(in oklab, var(--accent) 12%, transparent)', color: 'var(--accent)' }}
+                  >
+                    {notifStatus === 'loading' ? 'Activando…' : 'Activar'}
+                  </button>
+                )}
+              </div>
+            </Seccion>
+          </motion.div>
+        )}
 
         {/* ── CUENTA ── */}
         <motion.div variants={reduced ? {} : staggerItem}>

@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/recordatorio-practica",
+      "schedule": "0 13 * * *"
+    },
+    {
       "path": "/api/cron/expire-trials",
       "schedule": "0 9 * * *"
     },

@@ -133,6 +133,34 @@ export function ManifestacionesProvider({ children }: { children: ReactNode }) {
     setPracticeProgress((prev) => {
       const current = prev[manifestacionId] ?? iniciarPracticeProgress(manifestacionId);
       const updated = avanzarDia(current);
+
+      // Notificación de celebración (fire-and-forget)
+      const diasCompletados = updated.completedDays.length;
+      const hitosRacha = [7, 14, 21, 30];
+      if (hitosRacha.includes(diasCompletados)) {
+        fetch('/api/push/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: `🔥 ¡${diasCompletados} días seguidos manifestando!`,
+            body: diasCompletados === 30
+              ? 'Completaste tu ciclo de 30 días. ¡El universo lo celebra contigo!'
+              : 'Tu constancia está creando el camino hacia lo que deseas.',
+            url: '/app/manifestaciones',
+          }),
+        }).catch(() => {});
+      } else {
+        fetch('/api/push/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: '🌟 ¡Práctica completada!',
+            body: 'Tu energía de hoy ya está en el universo. Sigue así.',
+            url: '/app',
+          }),
+        }).catch(() => {});
+      }
+
       return { ...prev, [manifestacionId]: updated };
     });
     setSnapshots((prev) => [...prev, snapshot]);
@@ -180,6 +208,16 @@ export function ManifestacionesProvider({ children }: { children: ReactNode }) {
           m.id === id ? { ...m, estado: 'manifestado', cierre } : m
         )
       );
+      // Notificación de manifestación cumplida (fire-and-forget)
+      fetch('/api/push/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: '✨ ¡Se manifestó!',
+          body: 'Celebra este momento — lo que pediste llegó a tu vida.',
+          url: '/app/manifestaciones',
+        }),
+      }).catch(() => {});
     },
     []
   );

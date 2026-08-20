@@ -8,3 +8,4 @@
 /.playwright-mcp/
 
 # El .gitignore de web/ ya cubre node_modules y .env
+.vercel
