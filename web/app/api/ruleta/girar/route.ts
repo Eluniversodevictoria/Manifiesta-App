@@ -93,19 +93,20 @@ export async function POST() {
   // Server-side prize selection (prevents client manipulation)
   const premio = selectPrize();
 
-  const { error } = await admin.from('ruleta_giros').insert({
+  const { data: giro, error } = await admin.from('ruleta_giros').insert({
     user_id: user.id,
     premio_id: premio.id,
     premio_nombre: premio.nombre,
     premio_descripcion: premio.descripcion,
-  });
+  }).select('id').single();
 
-  if (error) {
-    console.error('[ruleta/girar]', error.message);
+  if (error || !giro) {
+    console.error('[ruleta/girar]', error?.message);
     return NextResponse.json({ error: 'Error interno' }, { status: 500 });
   }
 
   return NextResponse.json({
+    giro_id: giro.id,
     premio: { id: premio.id, nombre: premio.nombre, descripcion: premio.descripcion },
   });
 }

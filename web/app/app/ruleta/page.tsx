@@ -189,8 +189,38 @@ function Wheel({ wheelRef }: { wheelRef: React.RefObject<HTMLDivElement | null> 
 
 function ResultSheet({
   prizeConfig,
+  giroId,
   onClose,
-}: { prizeConfig: PremioConfig; onClose: () => void }) {
+}: { prizeConfig: PremioConfig; giroId: string | null; onClose: () => void }) {
+  const [genState, setGenState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [contenido, setContenido] = useState<string>('');
+
+  const handleRecibir = async () => {
+    if (!giroId || genState === 'loading' || genState === 'done') return;
+    setGenState('loading');
+    try {
+      const res = await fetch('/api/ruleta/generar-premio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ giro_id: giroId, premio_id: prizeConfig.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setContenido(data.contenido);
+      setGenState('done');
+    } catch {
+      setGenState('error');
+    }
+  };
+
+  // Renderiza el texto con **negrita** → <strong>
+  const renderContenido = (texto: string) =>
+    texto.split(/(\*\*[^*]+\*\*)/).map((part, i) =>
+      part.startsWith('**') && part.endsWith('**')
+        ? <strong key={i} style={{ color: 'var(--text-primary)' }}>{part.slice(2, -2)}</strong>
+        : <span key={i}>{part}</span>
+    );
+
   return (
     <>
       <motion.div
@@ -248,16 +278,81 @@ function ResultSheet({
           <h2 className="text-center text-2xl font-bold mb-3 leading-tight" style={{ color: 'var(--text-primary)' }}>
             {prizeConfig.nombre}
           </h2>
-          <p className="text-center text-base leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            {prizeConfig.descripcion}
-          </p>
-          <button
-            type="button" onClick={onClose}
-            className="mt-6 w-full py-4 rounded-2xl text-white font-bold text-base [touch-action:manipulation]"
-            style={{ background: `linear-gradient(135deg, ${prizeConfig.color} 0%, var(--accent) 100%)` }}
-          >
-            ¡Gracias, universo! ✦
-          </button>
+
+          {/* Contenido generado por IA */}
+          <AnimatePresence mode="wait">
+            {genState === 'idle' && (
+              <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <p className="text-center text-sm leading-relaxed mb-6" style={{ color: 'var(--text-secondary)' }}>
+                  Victoria preparó algo especial para ti, personalizado con tu manifestación actual.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleRecibir}
+                  className="w-full py-4 rounded-2xl text-white font-bold text-base [touch-action:manipulation]"
+                  style={{ background: `linear-gradient(135deg, ${prizeConfig.color} 0%, var(--accent) 100%)` }}
+                >
+                  Recibir mi {prizeConfig.nombre} ✦
+                </button>
+              </motion.div>
+            )}
+
+            {genState === 'loading' && (
+              <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="flex flex-col items-center gap-4 py-8"
+              >
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 1.4, ease: 'linear' }}
+                  className="size-10 rounded-full border-2"
+                  style={{
+                    borderColor: `color-mix(in srgb, ${prizeConfig.color} 20%, transparent)`,
+                    borderTopColor: prizeConfig.color,
+                  }}
+                />
+                <p className="text-sm text-center" style={{ color: 'var(--text-secondary)' }}>
+                  Victoria está preparando tu {prizeConfig.nombre}…
+                </p>
+              </motion.div>
+            )}
+
+            {genState === 'done' && (
+              <motion.div key="done" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl p-4 mb-6 text-sm leading-relaxed whitespace-pre-wrap"
+                style={{
+                  background: `color-mix(in srgb, ${prizeConfig.color} 6%, var(--surface))`,
+                  color: 'var(--text-secondary)',
+                  border: `1px solid color-mix(in srgb, ${prizeConfig.color} 18%, transparent)`,
+                }}
+              >
+                {renderContenido(contenido)}
+              </motion.div>
+            )}
+
+            {genState === 'error' && (
+              <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                className="text-center text-sm mb-6" style={{ color: 'var(--text-tertiary)' }}
+              >
+                No se pudo generar el contenido. Intenta de nuevo.
+                <button type="button" onClick={() => setGenState('idle')}
+                  className="block mx-auto mt-2 text-xs underline [touch-action:manipulation]"
+                  style={{ color: 'var(--accent)' }}
+                >
+                  Reintentar
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {genState === 'done' && (
+            <button
+              type="button" onClick={onClose}
+              className="w-full py-4 rounded-2xl font-bold text-base [touch-action:manipulation]"
+              style={{ background: 'var(--surface)', color: 'var(--text-primary)' }}
+            >
+              ¡Gracias, universo! ✦
+            </button>
+          )}
         </motion.div>
       </motion.div>
     </>
@@ -275,6 +370,7 @@ export default function RuletaPage() {
   const [nextAt, setNextAt] = useState<Date | null>(null);
   const [timeLeft, setTimeLeft] = useState('');
   const [prize, setPrize] = useState<PremioConfig | null>(null);
+  const [giroId, setGiroId] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [confetti, setConfetti] = useState(false);
@@ -338,6 +434,7 @@ export default function RuletaPage() {
         return;
       }
 
+      if (data.giro_id) setGiroId(data.giro_id);
       const wonId: string = data.premio.id;
       const prizeIdx = PREMIOS.findIndex(p => p.id === wonId);
       const idx = prizeIdx >= 0 ? prizeIdx : 0;
@@ -530,7 +627,9 @@ export default function RuletaPage() {
 
       {/* Result sheet */}
       <AnimatePresence>
-        {showResult && prize && <ResultSheet prizeConfig={prize} onClose={() => setShowResult(false)} />}
+        {showResult && prize && (
+          <ResultSheet prizeConfig={prize} giroId={giroId} onClose={() => setShowResult(false)} />
+        )}
       </AnimatePresence>
 
       {/* Pointer bounce animation */}
