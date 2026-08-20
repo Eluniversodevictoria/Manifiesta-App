@@ -543,12 +543,14 @@ function ListaResultados({
   onTap,
   onToggleGuardado,
   titulo,
+  onLimpiar,
 }: {
   items: ContenidoBiblioteca[];
   guardados: string[];
   onTap: (id: string) => void;
   onToggleGuardado: (id: string, e: React.MouseEvent) => void;
   titulo?: string;
+  onLimpiar?: () => void;
 }) {
   if (items.length === 0) {
     return (
@@ -562,6 +564,16 @@ function ListaResultados({
         <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
           Intenta con otra palabra o categoría
         </p>
+        {onLimpiar && (
+          <button
+            type="button"
+            onClick={onLimpiar}
+            className="mt-1 flex h-10 items-center gap-1.5 rounded-full px-5 text-sm font-semibold [touch-action:manipulation]"
+            style={{ background: 'color-mix(in oklab, var(--accent) 12%, transparent)', color: 'var(--accent)' }}
+          >
+            Limpiar búsqueda
+          </button>
+        )}
       </div>
     );
   }
@@ -953,6 +965,7 @@ function BibliotecaContent() {
                     ? TIPO_LABEL[filtroTipo]
                     : 'Resultados'
                 }
+                onLimpiar={limpiarBusqueda}
               />
             </motion.div>
           ) : (

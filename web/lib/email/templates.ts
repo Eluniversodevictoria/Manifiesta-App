@@ -253,3 +253,35 @@ export function emailWinbackCancelada(nombre: string): { subject: string; html: 
     ),
   };
 }
+
+// Re-engagement — usuaria activa sin práctica en 3+ días
+// Si hay deseo activo, el recordatorio lo menciona directamente
+export function emailReengagementInactiva(
+  nombre: string,
+  deseo?: string
+): { subject: string; html: string } {
+  const conDeseo = !!(deseo && deseo.trim().length > 0);
+  const subject = conDeseo
+    ? `${nombre}, tu práctica de "${deseo!.slice(0, 40)}" te espera 🌸`
+    : `${nombre}, hace unos días que no te vemos 🌙`;
+
+  const cuerpo = conDeseo
+    ? h1('Tu práctica sigue preparada para ti.') +
+      p(`Has estado ausente unos días — y está bien, la vida tiene su propio ritmo. Pero tu deseo de <em>"${deseo}"</em> sigue aquí, esperándote.`) +
+      p('Victoria tiene lista tu práctica de hoy. Solo necesita unos minutos, y tú lo vales.') +
+      accentBox('"Tu deseo no se va a ningún lado. El universo sigue trabajando, aunque tú no lo hagas todos los días."')
+    : h1('Hace unos días que no practicas, ' + nombre + '.') +
+      p('La manifestación no requiere perfección — requiere constancia. Y la constancia se construye volviendo, aunque sea hoy.') +
+      p('Tu historial, tus deseos y tu práctica del día están esperándote exactamente donde los dejaste.') +
+      accentBox('"Volver es el acto más poderoso. Lo que plantaste sigue creciendo."');
+
+  return {
+    subject,
+    html: shell(
+      cuerpo +
+      cta('Retomar mi práctica →', APP_URL + '/app') +
+      unsubscribeFooter('recordatorio de actividad')
+    ),
+  };
+}
+

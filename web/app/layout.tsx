@@ -21,6 +21,15 @@ export const metadata: Metadata = {
   title: "MANIFIESTA — con Victoria | Tu práctica diaria de manifestación",
   description:
     "Escribe lo que quieres atraer y Victoria te prepara una práctica personalizada para hoy. Afirmaciones, rituales, scripting y una acción concreta — todo en 10 minutos.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "MANIFIESTA",
+    statusBarStyle: "default",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({
@@ -33,6 +42,10 @@ export default function RootLayout({
       lang="es"
       className={`${playfair.variable} ${dmSans.variable} h-full antialiased`}
     >
+      <head>
+        <meta name="theme-color" content="#C4748A" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+      </head>
       <body className="min-h-dvh flex flex-col">
         <MotionConfig reducedMotion="user">{children}</MotionConfig>
       </body>

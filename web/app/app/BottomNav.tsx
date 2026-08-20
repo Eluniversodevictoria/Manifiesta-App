@@ -5,7 +5,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Sparkles, Heart, BookOpen, User } from 'lucide-react';
+import { Sparkles, Heart, BookOpen, User, Trophy } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useSheetUrgente } from '@/lib/SheetUrgenteContext';
 
@@ -15,7 +15,8 @@ const TABS_IZQ = [
 ] as const;
 
 const TABS_DER = [
-  { href: '/app/biblioteca',       label: 'Biblioteca',     Icon: BookOpen },
+  { href: '/app/ruleta',           label: 'Ruleta',         Icon: Trophy   },
+  { href: '/app/biblioteca',       label: 'Biblio.',        Icon: BookOpen },
   { href: '/app/perfil',           label: 'Perfil',         Icon: User     },
 ] as const;
 

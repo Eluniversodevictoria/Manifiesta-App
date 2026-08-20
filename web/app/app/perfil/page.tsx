@@ -13,6 +13,7 @@ import {
   LogOut, CheckCircle2, Sparkles, BookOpen, Trash2,
 } from 'lucide-react';
 import { useManifestaciones } from '@/lib/ManifestacionesContext';
+import { InstalarAppInline } from '@/components/InstalarApp';
 import { usePlan } from '@/lib/PlanContext';
 
 // Calcula racha de días consecutivos con check-in hasta hoy
@@ -428,6 +429,11 @@ const [pushSupported, setPushSupported] = useState(false);
             </Seccion>
           </motion.div>
         )}
+
+        {/* ── INSTALAR APP ── */}
+        <motion.div variants={reduced ? {} : staggerItem}>
+          <InstalarAppInline />
+        </motion.div>
 
         {/* ── CUENTA ── */}
         <motion.div variants={reduced ? {} : staggerItem}>

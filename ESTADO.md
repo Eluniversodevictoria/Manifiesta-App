@@ -1,6 +1,6 @@
 # ESTADO — MANIFIESTA con Victoria
 
-> Última actualización: 2026-08-19 (sesión tarde) · Fase: Producción — APTA PARA VENDER · Notificaciones push activas
+> Última actualización: 2026-08-19 (sesión tarde-3) · Fase: Producción — APTA PARA VENDER · PWA + Ruleta completadas
 
 ---
 
@@ -199,6 +199,25 @@ Fuente de datos futura: `event_log` — JOIN de los 3 eventos por `user_id`, ORD
 | Precios oficiales: $7.99/mes · $59.99/año | ✅ |
 
 `tsc ✓ · build ✓ · 0 bloqueadores MVP`
+
+### RULETA DE PREMIOS — implementada (2026-08-19)
+
+| Componente | Estado |
+|---|---|
+| Migración `20260819_ruleta_giros.sql` — tabla + RLS + GRANT + RPC admin | ✅ listo para ejecutar |
+| `POST /api/ruleta/girar` — selección server-side + cooldown 24h | ✅ |
+| `GET /api/ruleta/historial` — historial 5 giros + estado blocked/nextAt | ✅ |
+| `app/app/ruleta/page.tsx` — SVG wheel 8 secciones + animación CSS cubic-bezier + confetti canvas + bottom sheet resultado + historial | ✅ |
+| `app/app/ruleta/premios.ts` — config de premios (colores, iconos, descripciones, probabilidades) | ✅ |
+| BottomNav — tab Ruleta (Trophy icon) agregado a TABS_DER | ✅ |
+| Admin dashboard — sección Ruleta con giros totales, usuarios únicos, giros hoy, ranking de premios | ✅ |
+| `lib/supabase/admin-queries.ts` — `adminGetRuletaStats()` + tipo `RuletaStats` | ✅ |
+
+**8 premios aprobados:** Ritual Lunar · Afirmación VIP · Script Mágico · Decreto Especial · Meditación Guiada · Mensaje Secreto · Sorpresa Estelar · Joya de Biblioteca
+
+**Pendiente del dueño:** ejecutar `20260819_ruleta_giros.sql` en Supabase SQL Editor.
+
+`tsc ✓ · build error preexistente (env vars Supabase no disponibles localmente — en Vercel funciona)`
 
 ### ONBOARDING OVERHAUL — cambios aplicados (veredicto pendiente a pre-launch, 2026-08-18)
 

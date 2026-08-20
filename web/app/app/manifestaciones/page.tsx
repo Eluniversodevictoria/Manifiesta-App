@@ -317,6 +317,15 @@ export default function ManifestacionesPage() {
                 Escribe tu primer deseo y Victoria prepara tu práctica.
               </p>
             </div>
+            <button
+              type="button"
+              onClick={handleAgregar}
+              className="flex h-11 items-center gap-2 rounded-full px-6 text-sm font-semibold text-white [touch-action:manipulation]"
+              style={{ background: 'var(--accent)' }}
+            >
+              <Plus size={14} strokeWidth={2.5} />
+              Escribir mi primer deseo
+            </button>
           </motion.div>
         )}
 

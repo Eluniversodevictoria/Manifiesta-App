@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { adminGetMetrics } from '@/lib/supabase/admin-queries';
+import { adminGetMetrics, adminGetRuletaStats, type RuletaStats } from '@/lib/supabase/admin-queries';
 import type { Json } from '@/lib/supabase/database.types';
 import { StatCard } from './_components/StatCard';
 import { NoData } from './_components/NoData';
@@ -46,9 +46,18 @@ function pct(num: number | undefined | null, den: number | undefined | null): st
   return `${Math.round((num / den) * 100)}%`;
 }
 
+function asRuleta(j: Json | null): RuletaStats | null {
+  if (!j || typeof j !== 'object' || Array.isArray(j)) return null;
+  return j as unknown as RuletaStats;
+}
+
 export default async function AdminDashboard() {
   const supabase = await createClient();
-  const { data: raw, error } = await adminGetMetrics(supabase);
+  const [{ data: raw, error }, { data: ruletaRaw }] = await Promise.all([
+    adminGetMetrics(supabase),
+    adminGetRuletaStats(supabase),
+  ]);
+  const ruleta = asRuleta(ruletaRaw);
   const m = asMetrics(raw);
 
   const setupNeeded = error?.message?.includes('is_owner') || error?.message?.includes('denegado');
@@ -126,6 +135,37 @@ export default async function AdminDashboard() {
             <StatCard label="Ingresos totales (USD)" value={m ? `$${fmt(m.hotmart_revenue_total_usd, 2)}` : null} />
             <StatCard label="Pro mensual / anual" value={m ? `${fmt(m.pro_mensual)} / ${fmt(m.pro_anual)}` : null} />
           </div>
+        )}
+      </section>
+
+      {/* Ruleta */}
+      <section style={{ marginBottom: '2rem' }}>
+        <h2 style={sectionTitle}>Ruleta de Premios</h2>
+        {!ruleta ? (
+          <NoData reason="Ejecuta la migración 20260819_ruleta_giros.sql para activar la Ruleta." />
+        ) : (
+          <>
+            <div style={{ ...grid4, marginBottom: '0.75rem' }}>
+              <StatCard label="Giros totales" value={fmt(ruleta.total_giros)} />
+              <StatCard label="Usuarias que giraron" value={fmt(ruleta.usuarios_unicos)} />
+              <StatCard label="Giros hoy" value={fmt(ruleta.giros_hoy)} accent />
+            </div>
+            {ruleta.premios.length > 0 && (
+              <div style={{ background: 'var(--surface)', borderRadius: 12, padding: '0.75rem 1rem' }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  Premios ganados
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  {ruleta.premios.map((p) => (
+                    <div key={p.premio_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, color: 'var(--text-primary)' }}>
+                      <span>{p.premio_nombre}</span>
+                      <span style={{ fontWeight: 600, color: 'var(--accent)' }}>{fmt(p.veces)}×</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </section>
 

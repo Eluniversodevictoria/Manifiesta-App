@@ -50,6 +50,17 @@ export function adminGetEvents(client: any, limitN = 100, nameFilter?: string | 
   return rpc<AdminEvent[]>(client, 'admin_get_events', { limit_n: limitN, name_filter: nameFilter ?? null });
 }
 
+export type RuletaStats = {
+  total_giros: number;
+  usuarios_unicos: number;
+  giros_hoy: number;
+  premios: Array<{ premio_id: string; premio_nombre: string; veces: number }>;
+};
+
+export function adminGetRuletaStats(client: any) {
+  return rpc<RuletaStats>(client, 'admin_get_ruleta_stats');
+}
+
 export function adminUpdateUserPlan(
   client: any,
   targetUserId: string,

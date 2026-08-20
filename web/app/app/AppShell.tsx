@@ -13,6 +13,8 @@ import { PlanProvider, usePlan } from '@/lib/PlanContext';
 import { SheetUrgenteProvider, useSheetUrgente } from '@/lib/SheetUrgenteContext';
 import { PaywallModal } from '@/components/PaywallModal';
 import { FirstTimeTour } from '@/components/FirstTimeTour';
+import { HelpFAQ } from '@/components/HelpFAQ';
+import { InstalarAppAutoPrompt } from '@/components/InstalarApp';
 
 // ── Pantalla de carga mínima ───────────────────────────────────────────────
 function LoadingScreen() {
@@ -69,6 +71,8 @@ function AppShellInner({ children }: { children: ReactNode }) {
           <BottomNav />
           <SheetUrgente abierto={abierto} onCerrar={cerrar} />
           <FirstTimeTour />
+          <HelpFAQ />
+          <InstalarAppAutoPrompt />
         </>
       ) : (
         // Gate global: trial vencido o suscripción inactiva

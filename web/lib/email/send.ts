@@ -14,7 +14,8 @@ export type EmailTipo =
   | 'refund'
   | 'trial_expired'
   | 'winback_trial'
-  | 'winback_cancelled';
+  | 'winback_cancelled'
+  | 'reengagement_inactiva';
 
 interface SendOptions {
   to: string;
@@ -31,7 +32,7 @@ function getAdmin() {
   );
 }
 
-// Verifica si ya se envió este tipo de email para este usuario (idempotencia)
+// Verifica si ya se envió este tipo de email para este usuario (idempotencia — one-shot)
 async function yaEnviado(userId: string, tipo: EmailTipo): Promise<boolean> {
   const admin = getAdmin();
   const { data } = await admin
@@ -40,6 +41,21 @@ async function yaEnviado(userId: string, tipo: EmailTipo): Promise<boolean> {
     .eq('user_id', userId)
     .eq('email_tipo', tipo)
     .eq('status', 'sent')
+    .maybeSingle();
+  return !!data;
+}
+
+// Verifica si ya se envió este tipo de email en los últimos N días (cooldown periódico)
+export async function yaEnviadoEnDias(userId: string, tipo: EmailTipo, dias: number): Promise<boolean> {
+  const admin = getAdmin();
+  const desde = new Date(Date.now() - dias * 86_400_000).toISOString();
+  const { data } = await admin
+    .from('email_log')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('email_tipo', tipo)
+    .eq('status', 'sent')
+    .gte('created_at', desde)
     .maybeSingle();
   return !!data;
 }

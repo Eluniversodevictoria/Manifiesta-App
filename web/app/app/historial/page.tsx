@@ -444,7 +444,16 @@ export default function HistorialPage() {
                   ? 'Completa tu primera práctica y aparecerá aquí.'
                   : 'Prueba el filtro "Todo" para ver toda tu actividad.'}
               </p>
-              {filtroTipo !== 'todo' && (
+              {filtroTipo === 'todo' ? (
+                <Link
+                  href="/app"
+                  className="mt-2 flex h-11 items-center gap-2 rounded-full px-6 text-sm font-semibold text-white [touch-action:manipulation]"
+                  style={{ background: 'var(--accent)' }}
+                >
+                  <Sparkles size={14} strokeWidth={2} />
+                  Ir a mi práctica de hoy
+                </Link>
+              ) : (
                 <button
                   type="button"
                   onClick={() => { setFiltroTipo('todo'); setFiltroManifId(null); }}
