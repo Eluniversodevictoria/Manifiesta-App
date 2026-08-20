@@ -50,6 +50,7 @@ const FEATURES_ANUAL = [
   'Biblioteca de rituales, visualizaciones y scripting',
   'Contenido nuevo cada semana — rituales, prácticas y más',
   'Se manifestó ✨ — marca el momento en que llegó',
+  '🎁 Ebook "La vida que sí me permito vivir" — 235 páginas de regalo',
 ];
 
 

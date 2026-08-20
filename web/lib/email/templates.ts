@@ -174,6 +174,8 @@ export function emailSuscripcionActivada(nombre: string, periodo: 'mensual' | 'a
         'Historial completo de tu práctica',
       ]) +
       cta('Entrar a MANIFIESTA →', APP_URL + '/app') +
+      accentBox('🎁 <strong>Tu regalo de bienvenida:</strong> el ebook <em>"La vida que sí me permito vivir"</em> — 235 páginas de Victoria para ti.') +
+      cta('Descargar mi ebook →', 'https://drive.google.com/file/d/1KE10FPgW8c1kyJ0uCfJ6BilXpqhAM5vB/view?usp=share_link') +
       p('Si tienes cualquier pregunta, responde este email directamente. Estamos aquí.')
     ),
   };
