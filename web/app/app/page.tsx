@@ -1347,7 +1347,7 @@ function InicioContent() {
           <div className="grid grid-cols-3 gap-2">
             {[
               { icon: Sparkles, label: 'Afirmación', href: '/app/scripting?intencion=gratitud' },
-              { icon: Moon,     label: 'Visualización', href: '/app/scripting?intencion=bienestar' },
+              { icon: Moon,     label: 'Visualización', href: '/app/biblioteca' },
               { icon: PenLine,  label: 'Scripting', href: '/app/scripting' },
             ].map(({ icon: Ico, label, href }) => (
               <Link
