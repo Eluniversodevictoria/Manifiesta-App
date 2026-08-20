@@ -15,6 +15,7 @@ import { PaywallModal } from '@/components/PaywallModal';
 import { FirstTimeTour } from '@/components/FirstTimeTour';
 import { HelpFAQ } from '@/components/HelpFAQ';
 import { InstalarAppAutoPrompt } from '@/components/InstalarApp';
+import { RuletaFAB } from '@/components/RuletaFAB';
 
 // ── Pantalla de carga mínima ───────────────────────────────────────────────
 function LoadingScreen() {
@@ -73,6 +74,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
           <FirstTimeTour />
           <HelpFAQ />
           <InstalarAppAutoPrompt />
+          <RuletaFAB />
         </>
       ) : (
         // Gate global: trial vencido o suscripción inactiva
