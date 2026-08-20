@@ -86,9 +86,12 @@ export function PaywallModal({
               <div className="flex items-center gap-3">
                 <div
                   className="flex size-10 shrink-0 items-center justify-center rounded-2xl"
-                  style={{ background: 'color-mix(in oklab, var(--accent) 12%, transparent)' }}
+                  style={{
+                    background: 'radial-gradient(ellipse 80% 80% at 30% 20%, var(--accent-2) 0%, color-mix(in oklab, var(--accent) 8%, transparent) 100%)',
+                    border: '1px solid color-mix(in oklab, var(--accent) 24%, transparent)',
+                  }}
                 >
-                  <Sparkles size={20} color="var(--accent)" strokeWidth={1.8} aria-hidden="true" />
+                  <span style={{ color: 'var(--accent)', fontSize: 16, lineHeight: 1 }} aria-hidden="true">✦</span>
                 </div>
                 <div>
                   <p className="text-base font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
@@ -113,17 +116,20 @@ export function PaywallModal({
             </div>
 
             {/* Beneficios */}
-            <ul className="mb-5 flex flex-col gap-2">
+            <ul className="mb-5 flex flex-col gap-2.5">
               {BENEFICIOS.map((b) => (
-                <li key={b} className="flex items-center gap-2">
+                <li key={b} className="flex items-start gap-2.5">
                   <span
-                    className="flex size-5 shrink-0 items-center justify-center rounded-full"
-                    style={{ background: 'color-mix(in oklab, var(--accent) 12%, transparent)' }}
+                    className="flex size-5 shrink-0 items-center justify-center rounded-full mt-0.5"
+                    style={{
+                      background: 'color-mix(in oklab, var(--accent) 12%, transparent)',
+                      border: '1px solid color-mix(in oklab, var(--accent) 20%, transparent)',
+                    }}
                     aria-hidden="true"
                   >
-                    <Check size={11} strokeWidth={2.5} color="var(--accent)" />
+                    <Check size={10} strokeWidth={2.8} color="var(--accent)" />
                   </span>
-                  <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{b}</span>
+                  <span className="text-sm leading-snug" style={{ color: 'var(--text-primary)' }}>{b}</span>
                 </li>
               ))}
             </ul>
@@ -137,7 +143,9 @@ export function PaywallModal({
                 className="relative flex items-center justify-between rounded-2xl border-2 px-4 py-3 text-left [touch-action:manipulation]"
                 style={{
                   borderColor: planSel === 'anual' ? 'var(--accent)' : 'color-mix(in oklab, var(--text-tertiary) 28%, transparent)',
-                  background: planSel === 'anual' ? 'color-mix(in oklab, var(--accent) 7%, transparent)' : 'var(--surface)',
+                  background: planSel === 'anual'
+                    ? 'radial-gradient(ellipse 100% 100% at 0% 0%, var(--accent-2) 0%, color-mix(in oklab, var(--accent) 5%, transparent) 70%), var(--surface)'
+                    : 'var(--surface)',
                 }}
               >
                 <span

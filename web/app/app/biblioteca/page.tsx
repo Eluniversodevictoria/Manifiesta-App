@@ -341,19 +341,12 @@ function ContentCard({
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span
-            className="flex items-center gap-1 text-xs"
-            style={{ color: 'var(--text-tertiary)' }}
-          >
-            <Clock size={11} strokeWidth={1.8} aria-hidden="true" />
-            {item.duracionMin} min
-          </span>
           {item.audioEstado !== 'none' && (
             <span
               className="flex h-6 items-center rounded-full px-2 text-xs font-semibold"
               style={{
-                background: 'color-mix(in oklab, var(--text-tertiary) 10%, transparent)',
-                color: 'var(--text-secondary)',
+                background: 'color-mix(in oklab, var(--accent) 10%, transparent)',
+                color: 'var(--accent)',
               }}
             >
               <Play size={9} strokeWidth={2.5} className="mr-1" aria-hidden="true" />
@@ -372,17 +365,18 @@ function ContentCard({
           {item.titulo}
         </h3>
         <p
-          className="mt-1 text-xs leading-relaxed line-clamp-2"
+          className="mt-1 text-sm leading-relaxed line-clamp-2"
           style={{ color: 'var(--text-secondary)' }}
         >
           {item.descripcionCorta}
         </p>
       </div>
 
-      {/* Footer: categoría + guardar */}
+      {/* Footer: duración + guardar */}
       <div className="flex items-center justify-between">
-        <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-          {item.categoriaEmoji} {item.categoria}
+        <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+          <Clock size={11} strokeWidth={1.8} aria-hidden="true" />
+          {item.duracionMin} min · {item.categoria}
         </span>
         <motion.button
           type="button"
@@ -426,25 +420,24 @@ function HeroCard({
       transition={{ duration: 0.35, ease: EASE }}
       className="relative overflow-hidden rounded-3xl p-5 [touch-action:manipulation]"
       style={{
-        background:
-          'linear-gradient(135deg, color-mix(in oklab, var(--accent) 22%, var(--surface)), color-mix(in oklab, var(--accent) 8%, var(--surface-elevated)))',
-        border: '1px solid color-mix(in oklab, var(--accent) 28%, transparent)',
-        minHeight: '160px',
+        background: 'radial-gradient(ellipse 80% 90% at 10% -10%, var(--accent-2) 0%, transparent 55%), var(--surface)',
+        border: '1.5px solid color-mix(in oklab, var(--accent) 28%, transparent)',
+        boxShadow: '0 4px 28px -4px rgb(36 25 29 / 0.10), inset 0 0 0 0.5px color-mix(in oklab, var(--accent-2) 60%, transparent)',
+        minHeight: '168px',
       }}
       onClick={onTap}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && onTap()}
     >
-      {/* Orbe decorativo */}
-      <div
+      {/* Detalle ornamental */}
+      <p
         aria-hidden="true"
-        className="pointer-events-none absolute -right-8 -top-8 size-36 rounded-full"
-        style={{
-          background:
-            'radial-gradient(circle, color-mix(in oklab, var(--accent) 20%, transparent) 0%, transparent 70%)',
-        }}
-      />
+        className="pointer-events-none absolute right-5 top-5 text-xs font-medium"
+        style={{ color: 'var(--champagne)', letterSpacing: '0.3em', fontSize: 9, opacity: 0.7 }}
+      >
+        ✦ HOY
+      </p>
 
       {/* Chip tipo */}
       <div className="mb-3 flex items-center justify-between">
@@ -480,13 +473,13 @@ function HeroCard({
       </div>
 
       <h2
-        className="text-xl font-bold leading-snug"
+        className="text-2xl font-bold leading-tight"
         style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
       >
         {item.titulo}
       </h2>
       <p
-        className="mt-1.5 text-xs leading-relaxed line-clamp-2"
+        className="mt-2 text-sm leading-relaxed line-clamp-2"
         style={{ color: 'var(--text-secondary)' }}
       >
         {item.descripcionCorta}
@@ -675,10 +668,11 @@ function LayoutEditorial({
               <motion.div
                 key={f.tipo}
                 variants={staggerItem}
-                className="flex flex-col gap-1 rounded-2xl p-3.5 [touch-action:manipulation]"
+                className="flex flex-col gap-1.5 rounded-2xl p-4 [touch-action:manipulation]"
                 style={{
                   background: 'var(--surface)',
-                  border: '1px solid color-mix(in oklab, var(--text-tertiary) 15%, transparent)',
+                  border: '1px solid color-mix(in oklab, var(--text-tertiary) 14%, transparent)',
+                  boxShadow: 'var(--shadow-1)',
                 }}
                 role="button"
                 tabIndex={0}
@@ -692,14 +686,17 @@ function LayoutEditorial({
                 }}
               >
                 <span
-                  className="flex size-8 items-center justify-center rounded-xl"
-                  style={{ background: 'color-mix(in oklab, var(--accent) 10%, transparent)' }}
+                  className="flex size-10 items-center justify-center rounded-xl"
+                  style={{
+                    background: 'color-mix(in oklab, var(--accent) 10%, transparent)',
+                    boxShadow: '0 1px 4px color-mix(in oklab, var(--accent) 14%, transparent)',
+                  }}
                   aria-hidden="true"
                 >
-                  <f.icon size={16} color="var(--accent)" strokeWidth={1.8} />
+                  <f.icon size={18} color="var(--accent)" strokeWidth={1.7} />
                 </span>
                 <p
-                  className="text-sm font-semibold"
+                  className="text-sm font-semibold leading-tight"
                   style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
                 >
                   {f.label}

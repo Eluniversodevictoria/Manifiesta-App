@@ -71,9 +71,9 @@ function CardPrincipal({ item, getProgress, index, reduced }: {
       whileTap={{ scale: 0.985 }}
       className="flex w-full flex-col rounded-[var(--radius-card)] p-5 text-left [touch-action:manipulation]"
       style={{
-        background: 'var(--surface-rose)',
-        border: '1px solid color-mix(in oklab, var(--accent) 18%, transparent)',
-        boxShadow: 'var(--shadow-1)',
+        background: 'radial-gradient(ellipse 90% 80% at 5% -10%, var(--accent-2) 0%, transparent 60%), var(--surface-rose)',
+        border: '1.5px solid color-mix(in oklab, var(--accent) 24%, transparent)',
+        boxShadow: '0 4px 24px -4px rgb(36 25 29 / 0.09), inset 0 0 0 0.5px color-mix(in oklab, var(--accent-2) 50%, transparent)',
       }}
     >
       {/* Fila superior: ícono + texto + chevron */}
@@ -112,7 +112,7 @@ function CardPrincipal({ item, getProgress, index, reduced }: {
           </span>
         </div>
         <div
-          className="h-1.5 w-full overflow-hidden rounded-full"
+          className="h-2 w-full overflow-hidden rounded-full"
           style={{ background: 'color-mix(in oklab, var(--accent) 14%, transparent)' }}
         >
           <motion.div
@@ -339,7 +339,8 @@ export default function ManifestacionesPage() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.25, delay: 0.04, ease: EASE }}
             >
-              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+              <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+                <span style={{ color: 'var(--champagne)', fontSize: 9 }} aria-hidden="true">✦</span>
                 Atrayendo ahora
               </p>
               <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>

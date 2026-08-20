@@ -44,8 +44,18 @@ function BurbujaMensaje({ msg, idx }: { msg: Mensaje; idx: number }) {
       <div
         className="max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed"
         style={esVictoria
-          ? { background: 'var(--surface)', color: 'var(--text-primary)', borderBottomLeftRadius: 4 }
-          : { background: 'var(--accent)', color: 'white', borderBottomRightRadius: 4 }
+          ? {
+              background: 'var(--surface)',
+              color: 'var(--text-primary)',
+              borderBottomLeftRadius: 4,
+              border: '1px solid color-mix(in oklab, var(--accent) 16%, transparent)',
+            }
+          : {
+              background: 'var(--accent)',
+              color: 'white',
+              borderBottomRightRadius: 4,
+              boxShadow: '0 2px 8px color-mix(in oklab, var(--accent) 30%, transparent)',
+            }
         }
       >
         {esVictoria ? renderMarkdown(msg.content) : msg.content}
@@ -92,7 +102,11 @@ function ProGate({ onUpgrade }: { onUpgrade: () => void }) {
         initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', damping: 18, stiffness: 280 }}
         className="flex size-20 items-center justify-center rounded-full"
-        style={{ background: 'color-mix(in oklab, var(--accent) 12%, transparent)' }}
+        style={{
+          background: 'radial-gradient(ellipse 80% 80% at 30% 20%, var(--accent-2) 0%, color-mix(in oklab, var(--accent) 8%, transparent) 100%)',
+          border: '1.5px solid color-mix(in oklab, var(--accent) 24%, transparent)',
+          boxShadow: '0 4px 20px color-mix(in oklab, var(--accent) 15%, transparent)',
+        }}
       >
         <Lock size={32} color="var(--accent)" strokeWidth={1.6} />
       </motion.div>
@@ -293,7 +307,12 @@ export default function ChatPage() {
         </Link>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>Victoria</span>
+            <span
+              className="text-base font-bold"
+              style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
+            >
+              Victoria
+            </span>
             <span
               className="rounded-full px-2 py-0.5 text-xs font-semibold"
               style={{ background: 'color-mix(in oklab, var(--accent) 12%, transparent)', color: 'var(--accent)' }}
@@ -309,14 +328,27 @@ export default function ChatPage() {
               : 'Guía de manifestación'}
           </p>
         </div>
-        <Bot size={20} color="var(--text-tertiary)" />
+        <div
+          className="flex size-9 shrink-0 items-center justify-center rounded-full"
+          style={{
+            background: 'color-mix(in oklab, var(--accent) 10%, transparent)',
+            border: '1px solid color-mix(in oklab, var(--accent) 22%, transparent)',
+          }}
+          aria-hidden="true"
+        >
+          <span style={{ color: 'var(--accent)', fontSize: 14 }}>✦</span>
+        </div>
       </div>
 
       {/* Aviso de IA */}
       {estado === 'ok' && mensajes.length <= 1 && (
         <div
           className="flex-shrink-0 mx-4 mt-3 rounded-2xl px-4 py-3 text-xs leading-relaxed text-center"
-          style={{ background: 'color-mix(in oklab, var(--text-tertiary) 8%, transparent)', color: 'var(--text-tertiary)' }}
+          style={{
+            background: 'color-mix(in oklab, var(--accent) 6%, transparent)',
+            color: 'var(--text-tertiary)',
+            border: '1px solid color-mix(in oklab, var(--accent) 12%, transparent)',
+          }}
         >
           Victoria es una IA. Sus respuestas son orientación espiritual, no asesoría profesional.
         </div>
