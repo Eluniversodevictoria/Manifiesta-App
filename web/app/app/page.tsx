@@ -210,12 +210,19 @@ function BloqueMedia({
       <div
         className="rounded-[var(--radius-card)] p-5"
         style={{
-          background: 'color-mix(in oklab, var(--accent) 5%, var(--surface))',
-          borderLeft: '3px solid var(--accent)',
+          background: 'color-mix(in oklab, var(--accent) 6%, var(--surface))',
+          border: '1px solid color-mix(in oklab, var(--accent) 18%, transparent)',
+          boxShadow: 'var(--shadow-1)',
         }}
       >
         <div className="mb-3 flex items-center gap-2">
-          <Volume2 size={12} color="var(--accent)" strokeWidth={2} aria-hidden="true" />
+          <span
+            className="flex size-5 shrink-0 items-center justify-center rounded-full"
+            style={{ background: 'color-mix(in oklab, var(--accent) 14%, transparent)' }}
+            aria-hidden="true"
+          >
+            <Sparkles size={10} color="var(--accent)" strokeWidth={2} />
+          </span>
           <span
             className="text-xs font-semibold uppercase tracking-wider"
             style={{ color: 'var(--accent)' }}
@@ -247,7 +254,7 @@ function BloqueMedia({
       className="rounded-[var(--radius-card)] p-5"
       style={{
         background: 'var(--surface-2)',
-        borderLeft: '3px solid var(--accent)',
+        border: '1px solid color-mix(in oklab, var(--text-tertiary) 14%, transparent)',
       }}
     >
       <div className="mb-3 flex items-center gap-2">
@@ -266,7 +273,7 @@ function BloqueMedia({
         </span>
       </div>
       {children ?? (
-        <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+        <p className="text-base leading-relaxed" style={{ color: 'var(--text-primary)' }}>
           {cm.textContent}
         </p>
       )}
@@ -306,7 +313,7 @@ function BloqueScripting({ cm, manifestacionId }: { cm: ContenidoMedia; manifest
         <p className="mb-0.5 text-xs font-semibold" style={{ color: 'var(--accent)' }}>
           Scripting del día
         </p>
-        <p className="text-xs leading-snug" style={{ color: 'var(--text-secondary)' }}>
+        <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
           {cm.textContent}
         </p>
       </div>
@@ -342,8 +349,8 @@ function BloqueProtagonista({
       <div
         className="rounded-[var(--radius-card)] px-5 py-4"
         style={{
-          background: 'var(--surface-2)',
-          borderLeft: '3px solid var(--accent)',
+          background: 'color-mix(in oklab, var(--accent) 6%, var(--surface))',
+          border: '1px solid color-mix(in oklab, var(--accent) 16%, transparent)',
         }}
       >
         <div className="mb-3 flex items-center gap-2">
@@ -361,7 +368,7 @@ function BloqueProtagonista({
             Cómo practicarla
           </span>
         </div>
-        <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+        <p className="text-base leading-relaxed" style={{ color: 'var(--text-primary)' }}>
           {cm.textContent}
         </p>
         <VictoriaAudioPlayer
@@ -404,7 +411,7 @@ function BloqueProtagonista({
                 >
                   {i + 1}
                 </span>
-                <span className="text-sm leading-snug" style={{ color: 'var(--text-primary)' }}>
+                <span className="text-base leading-relaxed" style={{ color: 'var(--text-primary)' }}>
                   {paso}
                 </span>
               </li>
@@ -423,7 +430,10 @@ function BloqueProtagonista({
   return (
     <div
       className="rounded-[var(--radius-card)] px-5 py-4"
-      style={{ background: 'var(--surface-2)' }}
+      style={{
+        background: 'var(--surface-2)',
+        border: '1px solid color-mix(in oklab, var(--text-tertiary) 14%, transparent)',
+      }}
     >
       <div className="mb-3 flex items-center gap-2">
         <span
@@ -440,7 +450,7 @@ function BloqueProtagonista({
           {LABEL_TIPO[tipo]}
         </span>
       </div>
-      <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+      <p className="text-base leading-relaxed" style={{ color: 'var(--text-primary)' }}>
         {cm.textContent}
       </p>
       <VictoriaAudioPlayer
@@ -453,6 +463,93 @@ function BloqueProtagonista({
         className="mt-3"
       />
     </div>
+  );
+}
+
+// ── Estado de ánimo diario ────────────────────────────────────────────────────
+const ANIMOS = [
+  { id: 'radiante', emoji: '🌟', label: 'Radiante' },
+  { id: 'tranquila', emoji: '🌸', label: 'Tranquila' },
+  { id: 'dudosa', emoji: '🌫️', label: 'Con dudas' },
+  { id: 'cansada', emoji: '🌙', label: 'Cansada' },
+] as const;
+
+type AnimoId = typeof ANIMOS[number]['id'];
+
+function getAnimoKeyHoy() {
+  const d = new Date();
+  return `manifiesta_animo_${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function EstadoAnimoCard() {
+  const [seleccionado, setSeleccionado] = useState<AnimoId | null>(null);
+  const [guardado, setGuardado] = useState(false);
+
+  useEffect(() => {
+    const prev = localStorage.getItem(getAnimoKeyHoy());
+    if (prev) { setSeleccionado(prev as AnimoId); setGuardado(true); }
+  }, []);
+
+  const elegir = (id: AnimoId) => {
+    if (guardado) return;
+    setSeleccionado(id);
+    setGuardado(true);
+    localStorage.setItem(getAnimoKeyHoy(), id);
+  };
+
+  const animoSel = ANIMOS.find((a) => a.id === seleccionado);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className="rounded-[var(--radius-card)] p-4"
+      style={{
+        background: 'var(--surface)',
+        border: '1px solid color-mix(in oklab, var(--accent) 12%, transparent)',
+      }}
+    >
+      {!guardado ? (
+        <>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+            ¿Cómo llegas hoy?
+          </p>
+          <div className="grid grid-cols-4 gap-2">
+            {ANIMOS.map((a) => (
+              <button
+                key={a.id}
+                onClick={() => elegir(a.id)}
+                className="flex flex-col items-center gap-1.5 rounded-xl py-3 transition-transform active:scale-95"
+                style={{
+                  background: seleccionado === a.id
+                    ? 'color-mix(in oklab, var(--accent) 12%, transparent)'
+                    : 'color-mix(in oklab, var(--text-tertiary) 8%, transparent)',
+                  border: seleccionado === a.id
+                    ? '1.5px solid color-mix(in oklab, var(--accent) 35%, transparent)'
+                    : '1.5px solid transparent',
+                }}
+              >
+                <span className="text-xl leading-none">{a.emoji}</span>
+                <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)', fontSize: 11 }}>{a.label}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">{animoSel?.emoji ?? '✨'}</span>
+          <div>
+            <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Llegas {animoSel?.label?.toLowerCase() ?? 'con energía'} — y eso está perfecto.
+            </p>
+            <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+              Victoria ajustó tu práctica para hoy.
+            </p>
+          </div>
+        </div>
+      )}
+    </motion.div>
   );
 }
 
@@ -787,7 +884,7 @@ function InicioContent() {
             {saludo}
           </p>
           <h1
-            className="mt-0.5 text-xl font-bold leading-tight"
+            className="mt-0.5 text-2xl font-bold leading-tight"
             style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
           >
             Tu práctica de hoy
@@ -797,7 +894,11 @@ function InicioContent() {
         {/* Racha */}
         <div
           className="flex items-center gap-1.5 rounded-full px-3 py-2"
-          style={{ background: 'color-mix(in oklab, var(--accent) 9%, transparent)' }}
+          style={{
+            background: 'color-mix(in oklab, var(--accent) 9%, transparent)',
+            border: '1px solid color-mix(in oklab, var(--accent) 16%, transparent)',
+            boxShadow: '0 2px 8px color-mix(in oklab, var(--accent) 18%, transparent)',
+          }}
         >
           <Flame size={14} color="var(--accent)" strokeWidth={2} aria-hidden="true" />
           <span className="text-sm font-bold tabular-nums" style={{ color: 'var(--accent)' }}>{rachaDisplay}</span>
@@ -806,33 +907,38 @@ function InicioContent() {
       </motion.header>
 
 
-      <div className="flex flex-col gap-4 px-5">
+      <div className="flex flex-col gap-5 px-5">
 
-        {/* ── CAPA EMOCIONAL — intención del día ── */}
+        {/* ── CAPA EMOCIONAL — intención del día (hero editorial) ── */}
         {(() => {
           const diaIndex = new Date().getDate() % INTENCIONES_DIARIAS.length;
           return (
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.38, ease: EASE }}
-              className="rounded-[var(--radius-card)] px-5 py-5"
+              initial={{ opacity: 0, y: 12, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+              className="rounded-[var(--radius-card)] px-5 py-6"
               style={{
-                background: 'var(--surface)',
-                border: '1px solid color-mix(in oklab, var(--accent) 16%, transparent)',
+                background: 'radial-gradient(ellipse 90% 100% at 15% -5%, var(--accent-2) 0%, transparent 55%), var(--surface)',
+                border: '1px solid color-mix(in oklab, var(--accent) 22%, transparent)',
+                boxShadow: '0 4px 24px -4px rgb(36 25 29 / 0.09)',
               }}
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.06em]" style={{ color: 'var(--accent)' }}>
-                Tu intención de hoy
+              <p
+                className="text-xs font-medium"
+                style={{ color: 'var(--champagne)', letterSpacing: '0.4em', fontSize: 10 }}
+                aria-hidden="true"
+              >
+                ✦ MANIFIESTA
               </p>
               <p
-                className="mt-2 text-base font-semibold leading-snug"
+                className="mt-3 text-lg font-semibold italic leading-relaxed"
                 style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
               >
-                {INTENCIONES_DIARIAS[diaIndex]}
+                "{INTENCIONES_DIARIAS[diaIndex]}"
               </p>
-              <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                Lleva esta energía a tu práctica de hoy.
+              <p className="mt-3 text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                Tu intención de hoy · Llévala contigo
               </p>
             </motion.div>
           );
@@ -941,12 +1047,12 @@ function InicioContent() {
           <motion.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.04, ease: EASE }}
+            transition={{ duration: 0.3, delay: 0.06, ease: EASE }}
             className="flex items-center justify-between rounded-[var(--radius-card)] px-4 py-3"
             style={{
               background: 'var(--surface)',
-              border: '1px solid color-mix(in oklab, var(--text-tertiary) 16%, transparent)',
-              boxShadow: 'var(--shadow-1)',
+              border: '1px solid color-mix(in oklab, var(--text-tertiary) 12%, transparent)',
+              boxShadow: '0 4px 20px -4px rgb(36 25 29 / 0.08)',
             }}
           >
             <div className="flex min-w-0 items-center gap-3">
@@ -991,6 +1097,9 @@ function InicioContent() {
           </motion.div>
         )}
 
+        {/* ── ESTADO DE ÁNIMO — check rápido diario ── */}
+        {manifestacionActiva && <EstadoAnimoCard />}
+
         {/* ── PRÁCTICA — solo con manifestación activa ── */}
         {manifestacionActiva && (<>
 
@@ -1012,7 +1121,8 @@ function InicioContent() {
           className="rounded-[var(--radius-card)] p-5"
           style={{
             background: 'var(--surface-rose)',
-            boxShadow: 'var(--shadow-1)',
+            border: '1px solid color-mix(in oklab, var(--accent) 12%, transparent)',
+            boxShadow: '0 4px 20px -4px rgb(36 25 29 / 0.08)',
           }}
         >
           <div className="mb-3 flex items-center gap-2">
@@ -1084,7 +1194,7 @@ function InicioContent() {
           className="rounded-[var(--radius-card)] p-5"
           style={{
             background: 'var(--surface)',
-            borderLeft: '3px solid var(--accent)',
+            border: '1px solid color-mix(in oklab, var(--accent) 20%, transparent)',
             boxShadow: 'var(--shadow-1)',
           }}
         >
@@ -1103,7 +1213,7 @@ function InicioContent() {
               Acción de hoy
             </span>
           </div>
-          <p className="text-sm font-medium leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+          <p className="text-base leading-relaxed" style={{ color: 'var(--text-primary)' }}>
             {practica.base.accionConcreta.textContent}
           </p>
         </motion.div>
@@ -1186,7 +1296,7 @@ function InicioContent() {
                             </span>
                           </div>
                           <p
-                            className={`leading-relaxed ${bloque.tipo === 'afirmacion' ? 'text-base italic' : 'text-sm'}`}
+                            className={`leading-relaxed ${bloque.tipo === 'afirmacion' ? 'text-base italic' : 'text-base'}`}
                             style={{
                               color: 'var(--text-primary)',
                               fontFamily: bloque.tipo === 'afirmacion' ? 'var(--font-display)' : undefined,
@@ -1349,25 +1459,32 @@ function InicioContent() {
               { icon: Sparkles, label: 'Afirmación', href: '/app/scripting?intencion=gratitud' },
               { icon: Moon,     label: 'Visualización', href: '/app/biblioteca' },
               { icon: PenLine,  label: 'Scripting', href: '/app/scripting' },
-            ].map(({ icon: Ico, label, href }) => (
-              <Link
+            ].map(({ icon: Ico, label, href }, i) => (
+              <motion.div
                 key={href}
-                href={href}
-                className="flex flex-col items-center gap-2 rounded-[var(--radius-card)] px-2 py-4 text-center [touch-action:manipulation]"
-                style={{
-                  background: 'var(--surface)',
-                  border: '1px solid color-mix(in oklab, var(--text-tertiary) 16%, transparent)',
-                }}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.28, delay: 0.32 + i * 0.04, ease: EASE }}
               >
-                <span
-                  className="flex size-10 items-center justify-center rounded-xl"
-                  style={{ background: 'color-mix(in oklab, var(--accent) 10%, transparent)' }}
-                  aria-hidden="true"
+                <Link
+                  href={href}
+                  className="flex flex-col items-center gap-2 rounded-[var(--radius-card)] px-2 py-4 text-center [touch-action:manipulation]"
+                  style={{
+                    background: 'var(--surface)',
+                    border: '1px solid color-mix(in oklab, var(--text-tertiary) 16%, transparent)',
+                    boxShadow: 'var(--shadow-1)',
+                  }}
                 >
-                  <Ico size={18} color="var(--accent)" strokeWidth={1.8} />
-                </span>
-                <span className="text-xs font-medium leading-tight" style={{ color: 'var(--text-primary)' }}>{label}</span>
-              </Link>
+                  <span
+                    className="flex size-12 items-center justify-center rounded-2xl"
+                    style={{ background: 'color-mix(in oklab, var(--accent) 10%, transparent)' }}
+                    aria-hidden="true"
+                  >
+                    <Ico size={22} color="var(--accent)" strokeWidth={1.8} />
+                  </span>
+                  <span className="text-xs font-semibold leading-tight" style={{ color: 'var(--text-primary)' }}>{label}</span>
+                </Link>
+              </motion.div>
             ))}
           </div>
         </motion.div>
@@ -1377,64 +1494,55 @@ function InicioContent() {
           <span style={{ color: 'var(--accent)', opacity: 0.3, fontSize: 10, letterSpacing: '0.4em' }}>✦ ✦ ✦</span>
         </div>
 
-        {/* ── BIBLIOTECA — primero, acción neutral ── */}
+        {/* ── CHAT CON VICTORIA — tarjeta destacada por profundidad, no color ── */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3, delay: 0.35 }}
-        >
-          <Link
-            href="/app/biblioteca"
-            className="flex items-center gap-3 rounded-[var(--radius-card)] px-4 py-3 [touch-action:manipulation]"
-            style={{
-              background: 'var(--surface)',
-              border: '1px solid color-mix(in oklab, var(--text-tertiary) 16%, transparent)',
-            }}
-          >
-            <span
-              className="flex size-8 shrink-0 items-center justify-center rounded-xl"
-              style={{ background: 'color-mix(in oklab, var(--text-tertiary) 10%, transparent)' }}
-              aria-hidden="true"
-            >
-              <BookOpen size={15} color="var(--text-secondary)" strokeWidth={2} />
-            </span>
-            <span className="flex-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-              Explorar la biblioteca
-            </span>
-            <ChevronRight size={16} color="var(--text-tertiary)" aria-hidden="true" />
-          </Link>
-        </motion.div>
-
-        {/* ── CHAT CON VICTORIA ── */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3, delay: 0.35 }}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.36, ease: EASE }}
         >
           <Link
             href="/app/chat"
             className="flex w-full items-center gap-4 rounded-[var(--radius-card)] p-4 [touch-action:manipulation]"
             style={{
               background: 'var(--surface)',
-              boxShadow: 'var(--shadow-1)',
+              border: '1px solid color-mix(in oklab, var(--accent) 14%, transparent)',
+              boxShadow: 'var(--shadow-2)',
             }}
           >
             <span
               className="flex size-10 shrink-0 items-center justify-center rounded-xl"
-              style={{ background: 'var(--chip-bg)' }}
+              style={{ background: 'color-mix(in oklab, var(--accent) 10%, transparent)' }}
               aria-hidden="true"
             >
-              <Moon size={18} color="var(--accent)" strokeWidth={2} />
+              <Moon size={18} color="var(--accent)" strokeWidth={1.8} />
             </span>
             <div className="min-w-0 flex-1 text-left">
               <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
                 Habla con Victoria
               </p>
-              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                Tu guía de manifestación, disponible cuando la necesitas
+              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                Tu guía personal · disponible ahora
               </p>
             </div>
             <ChevronRight size={16} color="var(--text-tertiary)" aria-hidden="true" />
+          </Link>
+        </motion.div>
+
+        {/* ── BIBLIOTECA — enlace secundario sin fondo ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.24, delay: 0.42, ease: EASE }}
+        >
+          <Link
+            href="/app/biblioteca"
+            className="flex items-center gap-2 px-1 py-2 [touch-action:manipulation]"
+          >
+            <BookOpen size={14} color="var(--text-tertiary)" strokeWidth={2} aria-hidden="true" />
+            <span className="flex-1 text-sm" style={{ color: 'var(--text-tertiary)' }}>
+              Explorar la biblioteca
+            </span>
+            <ChevronRight size={14} color="var(--text-tertiary)" aria-hidden="true" />
           </Link>
         </motion.div>
 

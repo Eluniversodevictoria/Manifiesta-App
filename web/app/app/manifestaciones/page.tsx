@@ -234,6 +234,7 @@ function CardManifestado({ item }: { item: Manifestacion }) {
 // ── Pantalla ──────────────────────────────────────────────────────────────
 export default function ManifestacionesPage() {
   const { manifestaciones, add, getProgress } = useManifestaciones();
+  const router = useRouter();
   const prefersReduced = useReducedMotion() ?? false;
   const [mostrarForm, setMostrarForm] = useState(false);
   const [nuevoDeseo, setNuevoDeseo] = useState('');
@@ -531,9 +532,23 @@ export default function ManifestacionesPage() {
               <div className="h-px flex-1" style={{ background: 'color-mix(in oklab, var(--text-tertiary) 16%, transparent)' }} />
             </div>
 
-            {manifestados.map((m) => (
+            {manifestados.slice(0, 2).map((m) => (
               <CardManifestado key={m.id} item={m} />
             ))}
+
+            {/* Ver todas las victorias */}
+            <button
+              onClick={() => router.push('/app/victorias')}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-semibold"
+              style={{
+                background: 'color-mix(in oklab, var(--success) 8%, transparent)',
+                border: '1px solid color-mix(in oklab, var(--success) 20%, transparent)',
+                color: 'var(--success)',
+              }}
+            >
+              <Sparkles size={14} strokeWidth={2} />
+              Ver todas mis victorias ({manifestados.length})
+            </button>
           </motion.div>
         )}
 
