@@ -160,9 +160,19 @@ export function Oferta({ ctaLabel = 'Empezar mis 7 días gratis', ctaHref = '/on
             <p className="mt-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
               Se cobra después de tus 7 días gratis · Cancela cuando quieras
             </p>
-            <p className="mt-4 text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              Acceso completo a MANIFIESTA con la flexibilidad de mes a mes.
-            </p>
+            <ul className="mt-6 flex flex-col gap-3">
+              {[
+                'Todo lo del plan anual incluido',
+                'Flexibilidad de mes a mes',
+                'Cancela cuando quieras desde Hotmart',
+                '🎁 Ebook "La vida que sí me permito vivir"',
+              ].map((f, i) => (
+                <li key={i} className="flex items-start gap-3 text-sm leading-snug" style={{ color: 'var(--text-primary)' }}>
+                  <CheckCustom />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
             <div className="mt-6">
               <CtaButtonOutline href={ctaHref} fullMobile>
                 {ctaLabel}
@@ -171,10 +181,30 @@ export function Oferta({ ctaLabel = 'Empezar mis 7 días gratis', ctaHref = '/on
           </motion.div>
         </div>
 
+        {/* Banner ebook — visible y destacado */}
+        <motion.div
+          variants={item}
+          className="mx-auto mt-8 max-w-2xl rounded-2xl border p-5 flex items-center gap-4"
+          style={{
+            background: 'color-mix(in oklab, var(--accent) 8%, var(--surface))',
+            borderColor: 'color-mix(in oklab, var(--accent) 20%, transparent)',
+          }}
+        >
+          <span className="text-3xl shrink-0" aria-hidden="true">🎁</span>
+          <div>
+            <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Bonus incluido en ambos planes
+            </p>
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              Recibes el ebook <em>&quot;La vida que sí me permito vivir&quot;</em> — 235 páginas de Victoria — directo en tu email al suscribirte.
+            </p>
+          </div>
+        </motion.div>
+
         {/* Aviso de trial — visible, no en letra pequeña */}
         <motion.p
           variants={item}
-          className="mx-auto mt-8 max-w-sm text-center text-sm leading-relaxed"
+          className="mx-auto mt-6 max-w-sm text-center text-sm leading-relaxed"
           style={{ color: 'var(--text-secondary)' }}
         >
           Hoy $0 con tarjeta. Cancela desde Hotmart antes del día 7 si no deseas continuar.
