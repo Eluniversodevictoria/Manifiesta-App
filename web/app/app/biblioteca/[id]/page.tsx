@@ -279,7 +279,7 @@ export default function BibliotecaDetallePage({
   // ── Estado de audio local (independiente del catálogo estático) ───────────
   const catalogEstado = item?.audioEstado ?? 'none';
   const canHaveAudio = catalogEstado !== 'none';
-  const textHash = item ? hashText(item.textContent) : 0;
+  const textHash = item ? hashText(item.textContent.trim().slice(0, 1000)) : 0;
 
   const [audioEstado, setAudioEstado] = useState<AudioEstado>(() => {
     // Determinar estado inicial síncrono

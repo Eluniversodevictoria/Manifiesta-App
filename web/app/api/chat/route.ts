@@ -181,7 +181,7 @@ CÓMO RESPONDER:
   } catch (err) {
     success = false;
     errorMsg = err instanceof Error ? err.message : String(err);
-    console.error('[chat] Anthropic error:', errorMsg, '| model:', AI_MODEL, '| key_prefix:', process.env.ANTHROPIC_API_KEY?.slice(0, 20));
+    console.error('[chat] Anthropic error:', errorMsg);
     return NextResponse.json({ error: 'Error al conectar con Victoria' }, { status: 502 });
   } finally {
     // Log de costo (best-effort)

@@ -15,7 +15,6 @@ type Mensaje = {
   content: string;
 };
 
-// Convierte **texto** en <strong>texto</strong>
 function renderMarkdown(texto: string): React.ReactNode[] {
   return texto.split(/(\*\*[^*]+\*\*)/).map((part, i) =>
     part.startsWith('**') && part.endsWith('**')
@@ -86,8 +85,6 @@ function TypingIndicator() {
   );
 }
 
-// ── Gate para usuarias Free ────────────────────────────────────────────────────
-
 function ProGate({ onUpgrade }: { onUpgrade: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6 text-center gap-6">
@@ -122,8 +119,6 @@ function ProGate({ onUpgrade }: { onUpgrade: () => void }) {
   );
 }
 
-// ── Pantalla principal de chat ─────────────────────────────────────────────────
-
 export default function ChatPage() {
   const router = useRouter();
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
@@ -134,12 +129,35 @@ export default function ChatPage() {
   const [usados, setUsados] = useState(0);
   const limite = 30;
 
-  const bottomRef = useRef<HTMLDivElement>(null);
+  // Altura del composer para calcular el paddingBottom de la lista
+  const [composerH, setComposerH] = useState(80);
+
+  const bottomRef   = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const composerRef = useRef<HTMLDivElement>(null);
 
   const scrollBottom = useCallback(() => {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 80);
   }, []);
+
+  // Medir alto real del composer cuando cambia (teclado abierto/cerrado, sugerencias)
+  useEffect(() => {
+    if (!composerRef.current) return;
+    const ro = new ResizeObserver(() => {
+      setComposerH(composerRef.current?.offsetHeight ?? 80);
+    });
+    ro.observe(composerRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  // Scroll al fondo cuando se abre teclado (visualViewport shrinks)
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => scrollBottom();
+    vv.addEventListener('resize', onResize);
+    return () => vv.removeEventListener('resize', onResize);
+  }, [scrollBottom]);
 
   // Cargar historial inicial
   useEffect(() => {
@@ -158,7 +176,6 @@ export default function ChatPage() {
           content: m.content,
         }));
         if (hist.length === 0) {
-          // Mensaje de bienvenida (no se guarda en DB)
           setMensajes([{
             id: 'welcome',
             role: 'assistant',
@@ -181,6 +198,8 @@ export default function ChatPage() {
     const msgUser: Mensaje = { id: `u-${Date.now()}`, role: 'user', content: texto };
     setMensajes(prev => [...prev, msgUser]);
     setInput('');
+    // Reset textarea height
+    if (textareaRef.current) { textareaRef.current.style.height = 'auto'; }
     setEnviando(true);
     scrollBottom();
 
@@ -218,7 +237,6 @@ export default function ChatPage() {
     }
   };
 
-  // Auto-resize textarea
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
     const el = e.target;
@@ -236,14 +254,34 @@ export default function ChatPage() {
   }
 
   return (
+    /*
+     * Layout de chat con teclado:
+     * - El contenedor ocupa exactamente la ventana visual (dvh en desktop, visualViewport en mobile).
+     * - El composer está fijo en la parte inferior, siempre sobre el teclado.
+     * - La lista de mensajes ocupa el espacio restante y hace scroll interno.
+     * - El botón flotante (?) del layout global está oculto vía CSS en esta ruta.
+     */
     <div
-      className="flex min-h-dvh flex-col"
-      style={{ background: 'var(--bg)', fontFamily: 'var(--font-body)', color: 'var(--text-primary)' }}
+      className="flex flex-col chat-page-root"
+      style={{
+        background: 'var(--bg)',
+        fontFamily: 'var(--font-body)',
+        color: 'var(--text-primary)',
+        // Altura = ventana visual (se encoge cuando el teclado sube)
+        height: '100dvh',
+        // Anclar al viewport visual para que el composer siga el teclado
+        position: 'fixed',
+        inset: 0,
+        overflowY: 'hidden',
+      }}
     >
       {/* Header */}
       <div
-        className="sticky top-0 z-10 flex items-center gap-3 px-4 pt-12 pb-3"
-        style={{ background: 'var(--bg)', borderBottom: '1px solid color-mix(in oklab, var(--text-tertiary) 12%, transparent)' }}
+        className="flex-shrink-0 flex items-center gap-3 px-4 pt-12 pb-3"
+        style={{
+          background: 'var(--bg)',
+          borderBottom: '1px solid color-mix(in oklab, var(--text-tertiary) 12%, transparent)',
+        }}
       >
         <Link
           href="/app"
@@ -277,7 +315,7 @@ export default function ChatPage() {
       {/* Aviso de IA */}
       {estado === 'ok' && mensajes.length <= 1 && (
         <div
-          className="mx-4 mt-3 rounded-2xl px-4 py-3 text-xs leading-relaxed text-center"
+          className="flex-shrink-0 mx-4 mt-3 rounded-2xl px-4 py-3 text-xs leading-relaxed text-center"
           style={{ background: 'color-mix(in oklab, var(--text-tertiary) 8%, transparent)', color: 'var(--text-tertiary)' }}
         >
           Victoria es una IA. Sus respuestas son orientación espiritual, no asesoría profesional.
@@ -289,9 +327,11 @@ export default function ChatPage() {
         <ProGate onUpgrade={() => router.push('/app/perfil')} />
       ) : (
         <>
-          {/* Mensajes */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4"
-            style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
+          {/* Lista de mensajes — scroll interno, crece hasta llenar espacio disponible */}
+          <div
+            className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4 min-h-0"
+            style={{ paddingBottom: 16 }}
+          >
             <AnimatePresence initial={false}>
               {mensajes.map((msg, i) => (
                 <BurbujaMensaje key={msg.id} msg={msg} idx={i} />
@@ -299,7 +339,6 @@ export default function ChatPage() {
               {enviando && <TypingIndicator key="typing" />}
             </AnimatePresence>
 
-            {/* Mensaje límite */}
             {estado === 'limit_reached' && (
               <motion.div
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -313,53 +352,24 @@ export default function ChatPage() {
               </motion.div>
             )}
 
-            <div ref={bottomRef} />
+            <div ref={bottomRef} aria-hidden="true" />
           </div>
 
-          {/* Input */}
+          {/* Composer — pegado al fondo, sobre el teclado */}
           {estado !== 'limit_reached' && (
             <div
-              className="fixed bottom-0 left-0 right-0 px-4 pb-safe"
+              ref={composerRef}
+              className="flex-shrink-0 px-4"
               style={{
-                paddingBottom: 'calc(16px + env(safe-area-inset-bottom))',
+                paddingTop: 12,
+                paddingBottom: `max(16px, env(safe-area-inset-bottom))`,
                 background: 'var(--bg)',
                 borderTop: '1px solid color-mix(in oklab, var(--text-tertiary) 12%, transparent)',
               }}
             >
-              <div
-                className="flex items-end gap-2 rounded-2xl px-4 py-3"
-                style={{ background: 'var(--surface)' }}
-              >
-                <textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={handleInput}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Escríbele a Victoria…"
-                  rows={1}
-                  className="flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none"
-                  style={{ color: 'var(--text-primary)', maxHeight: 120 }}
-                  aria-label="Mensaje para Victoria"
-                />
-                <motion.button
-                  type="button"
-                  onClick={handleEnviar}
-                  disabled={!input.trim() || enviando}
-                  whileTap={{ scale: 0.88 }}
-                  className="flex size-9 shrink-0 items-center justify-center rounded-full [touch-action:manipulation]"
-                  style={{
-                    background: input.trim() && !enviando ? 'var(--accent)' : 'color-mix(in oklab, var(--text-tertiary) 15%, transparent)',
-                    transition: 'background 0.2s',
-                  }}
-                  aria-label="Enviar mensaje"
-                >
-                  <Send size={15} color={input.trim() && !enviando ? 'white' : 'var(--text-tertiary)'} strokeWidth={2} />
-                </motion.button>
-              </div>
-
               {/* Sugerencias rápidas (solo al inicio) */}
               {mensajes.length <= 1 && (
-                <div className="flex gap-2 mt-2 overflow-x-auto pb-1 scrollbar-none">
+                <div className="flex gap-2 mb-2 overflow-x-auto pb-1 scrollbar-none">
                   {[
                     '¿Cómo va mi proceso?',
                     'Dame una afirmación de hoy',
@@ -382,6 +392,38 @@ export default function ChatPage() {
                   ))}
                 </div>
               )}
+
+              <div
+                className="flex items-end gap-2 rounded-2xl px-4 py-3"
+                style={{ background: 'var(--surface)' }}
+              >
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={handleInput}
+                  onKeyDown={handleKeyDown}
+                  onFocus={scrollBottom}
+                  placeholder="Escríbele a Victoria…"
+                  rows={1}
+                  className="flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none"
+                  style={{ color: 'var(--text-primary)', maxHeight: 120 }}
+                  aria-label="Mensaje para Victoria"
+                />
+                <motion.button
+                  type="button"
+                  onClick={handleEnviar}
+                  disabled={!input.trim() || enviando}
+                  whileTap={{ scale: 0.88 }}
+                  className="flex size-9 shrink-0 items-center justify-center rounded-full [touch-action:manipulation]"
+                  style={{
+                    background: input.trim() && !enviando ? 'var(--accent)' : 'color-mix(in oklab, var(--text-tertiary) 15%, transparent)',
+                    transition: 'background 0.2s',
+                  }}
+                  aria-label="Enviar mensaje"
+                >
+                  <Send size={15} color={input.trim() && !enviando ? 'white' : 'var(--text-tertiary)'} strokeWidth={2} />
+                </motion.button>
+              </div>
             </div>
           )}
         </>

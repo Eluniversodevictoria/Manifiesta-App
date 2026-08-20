@@ -6,6 +6,7 @@
 
 import { type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { usePathname } from 'next/navigation';
 import { BottomNav } from './BottomNav';
 import { SheetUrgente } from './SheetUrgente';
 import { ManifestacionesProvider } from '@/lib/ManifestacionesContext';
@@ -56,6 +57,10 @@ function LoadingScreen() {
 function AppShellInner({ children }: { children: ReactNode }) {
   const { abierto, cerrar } = useSheetUrgente();
   const { hasAccess, loading } = usePlan();
+  const pathname = usePathname();
+
+  // En el chat el layout es position:fixed autocontenido — la nav y los FABs lo tapan
+  const esChat = pathname === '/app/chat';
 
   if (loading) return <LoadingScreen />;
 
@@ -66,15 +71,16 @@ function AppShellInner({ children }: { children: ReactNode }) {
     >
       {hasAccess ? (
         <>
-          <div className="flex flex-1 flex-col pb-[calc(68px+env(safe-area-inset-bottom))]">
+          {/* En chat el children ya ocupa fixed:inset-0 — no añadir padding de nav */}
+          <div className={esChat ? 'contents' : 'flex flex-1 flex-col pb-[calc(68px+env(safe-area-inset-bottom))]'}>
             {children}
           </div>
-          <BottomNav />
+          {!esChat && <BottomNav />}
           <SheetUrgente abierto={abierto} onCerrar={cerrar} />
-          <FirstTimeTour />
-          <HelpFAQ />
-          <InstalarAppAutoPrompt />
-          <RuletaFAB />
+          {!esChat && <FirstTimeTour />}
+          {!esChat && <HelpFAQ />}
+          {!esChat && <InstalarAppAutoPrompt />}
+          {!esChat && <RuletaFAB />}
         </>
       ) : (
         // Gate global: trial vencido o suscripción inactiva
