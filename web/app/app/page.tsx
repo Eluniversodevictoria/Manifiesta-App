@@ -952,6 +952,7 @@ function InicioContent() {
 
         {/* 1. INTENCIÓN DEL DÍA — card editorial, no rosa sólido */}
         <motion.div
+          data-tour="practica"
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.1, ease: EASE }}
@@ -1222,6 +1223,7 @@ function InicioContent() {
             ) : !completado ? (
               <motion.button
                 key="cta"
+                data-tour="checkin"
                 type="button"
                 onClick={completarPractica}
                 disabled={celebrando}
@@ -1358,6 +1360,7 @@ function InicioContent() {
           className="pb-28"
         >
           <button
+              data-tour="urgente"
               type="button"
               onClick={abrirSheetUrgente}
               className="flex w-full items-center gap-4 rounded-[var(--radius-card)] p-4 [touch-action:manipulation]"

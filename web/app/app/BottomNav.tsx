@@ -94,6 +94,7 @@ export function BottomNav() {
             href={href}
             aria-label={label}
             aria-current={activo ? 'page' : undefined}
+            data-tour={href === '/app/biblioteca' ? 'biblioteca' : undefined}
             className="flex flex-1 flex-col items-center justify-center gap-1 py-2 [touch-action:manipulation]"
           >
             <motion.span

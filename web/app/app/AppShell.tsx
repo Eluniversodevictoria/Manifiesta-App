@@ -12,6 +12,7 @@ import { ManifestacionesProvider } from '@/lib/ManifestacionesContext';
 import { PlanProvider, usePlan } from '@/lib/PlanContext';
 import { SheetUrgenteProvider, useSheetUrgente } from '@/lib/SheetUrgenteContext';
 import { PaywallModal } from '@/components/PaywallModal';
+import { FirstTimeTour } from '@/components/FirstTimeTour';
 
 // ── Pantalla de carga mínima ───────────────────────────────────────────────
 function LoadingScreen() {
@@ -67,6 +68,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
           </div>
           <BottomNav />
           <SheetUrgente abierto={abierto} onCerrar={cerrar} />
+          <FirstTimeTour />
         </>
       ) : (
         // Gate global: trial vencido o suscripción inactiva
