@@ -3,7 +3,7 @@
 // MANIFIESTA — Biblioteca
 // Catálogo navegable con búsqueda, filtros, editorial, "Necesito manifestar..." con IA
 
-import { useState, useRef, Suspense } from 'react';
+import { useState, useRef, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { staggerContainer, staggerItem } from '@/lib/motion-presets';
@@ -16,7 +16,6 @@ import {
   getByTipo,
   getDestacadoDelDia,
   TIPO_LABEL,
-  TIPO_EMOJI,
   type ContenidoBiblioteca,
   type TipoContenido,
 } from '@/lib/biblioteca-types';
@@ -36,6 +35,10 @@ const FILTROS: { tipo: TipoContenido; label: string; icon: LucideIcon }[] = [
   { tipo: 'autoestima',      label: 'Autoestima',      icon: Flower2  },
   { tipo: 'senal',           label: 'Señales',         icon: Hash     },
 ];
+
+const TIPO_ICON: Record<TipoContenido, LucideIcon> = Object.fromEntries(
+  FILTROS.map((f) => [f.tipo, f.icon])
+) as Record<TipoContenido, LucideIcon>;
 
 // ── ManifestadorIA — banner interactivo "Necesito manifestar..." ─────────────
 type EstadoManifestador = 'idle' | 'expandido' | 'cargando' | 'resultado';
@@ -265,7 +268,9 @@ function ManifestadorIA({
                       border: '1px solid color-mix(in oklab, var(--text-tertiary) 15%, transparent)',
                     }}
                   >
-                    <span className="text-base" aria-hidden="true">{item.categoriaEmoji}</span>
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-xl" style={{ background: 'color-mix(in oklab, var(--accent) 10%, transparent)' }} aria-hidden="true">
+                      {(() => { const TIco = TIPO_ICON[item.tipo]; return <TIco size={14} color="var(--accent)" strokeWidth={1.8} />; })()}
+                    </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
                         {item.titulo}
@@ -331,7 +336,7 @@ function ContentCard({
               color: 'var(--accent)',
             }}
           >
-            <span aria-hidden="true">{TIPO_EMOJI[item.tipo]}</span>
+            {(() => { const TIco = TIPO_ICON[item.tipo]; return <TIco size={10} strokeWidth={2.2} aria-hidden="true" />; })()}
             {TIPO_LABEL[item.tipo]}
           </span>
         </div>
@@ -450,7 +455,7 @@ function HeroCard({
             color: 'var(--accent)',
           }}
         >
-          <span aria-hidden="true">{TIPO_EMOJI[item.tipo]}</span>
+          {(() => { const TIco = TIPO_ICON[item.tipo]; return <TIco size={10} strokeWidth={2.2} aria-hidden="true" />; })()}
           {TIPO_LABEL[item.tipo]}
           {item.audioEstado !== 'none' && ' · Audio'}
         </span>
@@ -548,7 +553,9 @@ function ListaResultados({
   if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-        <span className="text-[32px]" aria-hidden="true">🔍</span>
+        <span className="flex size-14 items-center justify-center rounded-full" style={{ background: 'color-mix(in oklab, var(--text-tertiary) 10%, transparent)' }} aria-hidden="true">
+          <Search size={24} color="var(--text-tertiary)" strokeWidth={1.8} />
+        </span>
         <p className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
           Sin resultados
         </p>
@@ -791,6 +798,19 @@ function BibliotecaContent() {
   const [busqueda, setBusqueda] = useState('');
   const [filtroTipo, setFiltroTipo] = useState<TipoContenido | null>(null);
 
+  // Escuchar evento de las tarjetas de categoría en LayoutEditorial
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const tipo = (e as CustomEvent<TipoContenido>).detail;
+      setFiltroTipo(tipo);
+      setBusqueda('');
+      const scroller = document.querySelector<HTMLElement>('.overflow-y-auto');
+      if (scroller) scroller.scrollTop = 0;
+    };
+    window.addEventListener('biblioteca:filtro', handler);
+    return () => window.removeEventListener('biblioteca:filtro', handler);
+  }, []);
+
   const irADetalle = (id: string) => {
     registrarVisto(id);
     router.push(`/app/biblioteca/${id}`);
@@ -930,7 +950,7 @@ function BibliotecaContent() {
                 onToggleGuardado={handleToggleGuardado}
                 titulo={
                   filtroTipo
-                    ? `${TIPO_EMOJI[filtroTipo]} ${TIPO_LABEL[filtroTipo]}`
+                    ? TIPO_LABEL[filtroTipo]
                     : 'Resultados'
                 }
               />

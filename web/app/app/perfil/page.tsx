@@ -2,7 +2,7 @@
 
 // MANIFIESTA — Perfil
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
@@ -163,6 +163,21 @@ export default function PerfilPage() {
 
   const [confirmarEliminar, setConfirmarEliminar] = useState(false);
   const [eliminando, setEliminando] = useState(false);
+  const [nombreUsuario, setNombreUsuario] = useState<string>('');
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      const user = data?.user;
+      if (!user) return;
+      const nombre =
+        user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        user.email?.split('@')[0] ||
+        '';
+      setNombreUsuario(nombre);
+    });
+  }, []);
 
   const handleCerrarSesion = useCallback(async () => {
     setCerrandoSesion(true);
@@ -206,7 +221,7 @@ export default function PerfilPage() {
         </div>
 
         <h1 className="text-lg font-bold" style={{ fontFamily: 'var(--font-display)' }}>
-          Mi universo
+          {nombreUsuario || 'Mi universo'}
         </h1>
 
         {/* Stats inline */}

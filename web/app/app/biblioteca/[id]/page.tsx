@@ -14,14 +14,39 @@ import {
   Repeat2,
   ChevronRight,
   Sparkles,
+  Flame,
+  FileText,
+  Eye,
+  BookOpen,
+  Heart,
+  PenLine,
+  Flower2,
+  Hash,
+  type LucideIcon,
 } from 'lucide-react';
 import Link from 'next/link';
-import { getById, TIPO_LABEL, TIPO_EMOJI } from '@/lib/biblioteca-types';
+import { getById, TIPO_LABEL } from '@/lib/biblioteca-types';
+import type { TipoContenido } from '@/lib/biblioteca-types';
+
+const TIPO_ICON: Record<TipoContenido, LucideIcon> = {
+  ritual: Flame,
+  afirmacion: Sparkles,
+  decreto: FileText,
+  visualizacion: Eye,
+  'scripting-guiado': PenLine,
+  senal: Hash,
+  journaling: BookOpen,
+  gratitud: Heart,
+  autoestima: Flower2,
+};
 import { useBiblioteca } from '@/lib/useBiblioteca';
 import { VictoriaAudioPlayer } from '@/components/VictoriaAudioPlayer';
 import type { AudioEstado } from '@/lib/manifestaciones-types';
 
 const EASE = [0.16, 1, 0.3, 1] as const;
+
+// Voz por defecto para audio editorial (debe coincidir con CARTESIA_VOICE_ID en el servidor)
+const CARTESIA_VOICE_ID_DEFAULT = '3597a26f-80ef-4bd5-8101-9699bc764917';
 
 // ── Audio cache (module-level: sobrevive re-renders; sessionStorage: sobrevive navegación) ──────
 // Clave: item id · Valor: { url: blob URL, textHash, ts }
@@ -272,17 +297,60 @@ export default function BibliotecaDetallePage({
 
   // generando ref para evitar doble-llamada concurrente
   const generatingRef = useRef(false);
+  // ref para el intervalo de sondeo cuando el servidor está generando
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // En mount: intentar restaurar desde sessionStorage si no está en memoria
+  // Limpiar intervalo al desmontar
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, []);
+
+  // En mount: (1) memoria → (2) sessionStorage → (3) DB (fuente de verdad)
   useEffect(() => {
     if (!canHaveAudio) return;
     if (audioEstado === 'ready') return; // ya tenemos desde memoria
-    const url = loadFromSession(id, textHash);
-    if (url) {
-      AUDIO_MEM.set(id, { url, textHash });
-      setAudioUrl(url);
+
+    // Intentar sessionStorage primero (fast path)
+    const sessionUrl = loadFromSession(id, textHash);
+    if (sessionUrl) {
+      AUDIO_MEM.set(id, { url: sessionUrl, textHash });
+      setAudioUrl(sessionUrl);
       setAudioEstado('ready');
+      return;
     }
+
+    // Consultar DB
+    const checkDb = async () => {
+      try {
+        const res = await fetch(
+          `/api/audio-status?content_id=${encodeURIComponent(id)}&text_hash=${textHash}`,
+        );
+        if (!res.ok) return;
+        const data: { status: string; audioUrl?: string; audioDurationSec?: number } = await res.json();
+
+        if (data.status === 'ready' && data.audioUrl) {
+          AUDIO_MEM.set(id, { url: data.audioUrl, textHash });
+          setAudioUrl(data.audioUrl);
+          setAudioEstado('ready');
+          if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+          }
+        } else if (data.status === 'generating') {
+          setAudioEstado('generating');
+          // Sondear hasta que cambie
+          if (!pollingRef.current) {
+            pollingRef.current = setInterval(checkDb, 3000);
+          }
+        }
+      } catch {
+        // red no disponible — ignorar
+      }
+    };
+
+    checkDb();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -299,25 +367,64 @@ export default function BibliotecaDetallePage({
       const res = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: item.textContent }),
+        body: JSON.stringify({
+          text: item.textContent,
+          content_id: id,
+          voice_id: CARTESIA_VOICE_ID_DEFAULT,
+        }),
       });
 
       if (!res.ok) {
         throw new Error(`TTS error ${res.status}`);
       }
 
+      // El endpoint devuelve JSON con audioUrl cuando se envía content_id
+      const contentType = res.headers.get('content-type') ?? '';
+      if (contentType.includes('application/json')) {
+        const data: { audioUrl?: string; cached?: boolean; status?: string; error?: string } = await res.json();
+
+        if (data.status === 'generating') {
+          // Otro proceso está generando — sondear
+          if (!pollingRef.current) {
+            const poll = async () => {
+              try {
+                const statusRes = await fetch(
+                  `/api/audio-status?content_id=${encodeURIComponent(id)}&text_hash=${textHash}`,
+                );
+                if (!statusRes.ok) return;
+                const sd: { status: string; audioUrl?: string } = await statusRes.json();
+                if (sd.status === 'ready' && sd.audioUrl) {
+                  AUDIO_MEM.set(id, { url: sd.audioUrl, textHash });
+                  setAudioUrl(sd.audioUrl);
+                  setAudioEstado('ready');
+                  if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
+                } else if (sd.status === 'error') {
+                  setAudioEstado('error');
+                  if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
+                }
+              } catch { /* ignorar */ }
+            };
+            pollingRef.current = setInterval(poll, 3000);
+          }
+          return; // generatingRef se libera abajo en finally
+        }
+
+        if (data.audioUrl) {
+          AUDIO_MEM.set(id, { url: data.audioUrl, textHash });
+          setAudioUrl(data.audioUrl);
+          setAudioEstado('ready');
+          return;
+        }
+
+        throw new Error(data.error ?? 'Respuesta inesperada del servidor');
+      }
+
+      // Fallback: respuesta como buffer (sin content_id — no debería ocurrir aquí)
       const buffer = await res.arrayBuffer();
-
-      // Guardar en sessionStorage para persistir entre navegaciones
       saveToSession(id, buffer, textHash);
-
-      // Crear blob URL para reproducción inmediata
       const blob = new Blob([buffer], { type: 'audio/mpeg' });
       const url = URL.createObjectURL(blob);
-
-      // Guardar en memoria para reutilización en misma sesión
       AUDIO_MEM.set(id, { url, textHash });
-
       setAudioUrl(url);
       setAudioEstado('ready');
     } catch (err) {
@@ -381,7 +488,7 @@ export default function BibliotecaDetallePage({
           className="flex items-center gap-1.5 text-sm font-semibold"
           style={{ color: 'var(--text-secondary)' }}
         >
-          <span aria-hidden="true">{TIPO_EMOJI[item.tipo]}</span>
+          {(() => { const TIco = TIPO_ICON[item.tipo]; return <TIco size={14} color="var(--text-secondary)" strokeWidth={1.8} aria-hidden="true" />; })()}
           {TIPO_LABEL[item.tipo]}
         </span>
 
@@ -470,7 +577,7 @@ export default function BibliotecaDetallePage({
           <motion.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.28, delay: 0.1 }}
+            transition={{ duration: 0.22 }}
           >
             <VictoriaAudioPlayer
               audioEstado={audioEstado}

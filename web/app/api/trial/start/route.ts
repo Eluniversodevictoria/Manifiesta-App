@@ -17,12 +17,13 @@ export async function POST() {
     { cookies: { getAll: () => cookieStore.getAll() } }
   );
 
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
+  // getUser() valida el token contra el servidor (más seguro que getSession)
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  if (!authUser) {
     return NextResponse.json({ error: 'No autenticada' }, { status: 401 });
   }
 
-  const userId = session.user.id;
+  const userId = authUser.id;
   const admin = createAdmin(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!

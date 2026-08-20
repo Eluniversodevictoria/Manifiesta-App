@@ -294,6 +294,51 @@ Historial UI actual usa `checkIns` para mostrar la cronología. Los `PracticeSna
 
 ---
 
+## AUDITORÍA DE PRODUCCIÓN — 2026-08-19
+
+**Veredicto: NO APTO para lanzamiento público** — 2 bloqueantes corregidos en código, 5 acciones manuales requeridas antes de abrir tráfico real.
+
+### Correcciones aplicadas en código (tsc ✓)
+
+| # | Archivo | Corrección |
+|---|---------|------------|
+| C1 | `web/middleware.ts` | **CREADO** — protección edge de `/app/*` y `/admin/*`: sin sesión → redirige a `/entrar`. Era el bloqueante más crítico (rutas protegidas sin guard de servidor). |
+| C2 | `web/next.config.ts` | Headers HTTP de seguridad: `X-Content-Type-Options`, `X-Frame-Options: DENY`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`, `Content-Security-Policy`. |
+| C3 | `web/app/api/tts/route.ts` | Timeout de 30 s en `callCartesia()` vía `AbortController` — evita requests colgados indefinidamente si Cartesia no responde. |
+| C4 | `web/app/api/trial/start/route.ts` | `getSession()` reemplazado por `getUser()` — valida token contra el servidor (antes era vulnerable a JWT manipulados). |
+| C5 | `web/app/api/webhooks/hotmart/route.ts` | `listUsers()` con `perPage:1000` explícito — mejora marginal; la solución definitiva es C5-MANUAL. |
+
+### Bloqueantes pendientes — acción manual requerida
+
+| # | Severidad | Qué hacer |
+|---|-----------|-----------|
+| M1 | ❌ BLOQUEANTE | **CRON_SECRET faltante en `.env.local` y Vercel** — los 6 endpoints `/api/cron/*` rechazan sin él. Ir a Vercel → Settings → Environment Variables → agregar `CRON_SECRET` con un valor aleatorio seguro (ej. `openssl rand -hex 32`). También agregar en `.env.local` local. |
+| M2 | ❌ BLOQUEANTE | **Bucket de Supabase Storage sin crear** — el bucket `audio-biblioteca` no existe hasta crearlo manualmente: Supabase Dashboard → Storage → New bucket → nombre `audio-biblioteca` → Público: sí → límite 50 MB. Sin esto el TTS falla al guardar audio. |
+| M3 | ⚠️ IMPORTANTE | **Supabase pausado (free tier)** — restaurar proyecto en dashboard.supabase.com. Luego aplicar las 3 migraciones pendientes: `20260819_trial_access_model.sql`, `20260819_email_log.sql`, `20260819_audio_assets.sql` (SQL Editor → Run). |
+| M4 | ⚠️ IMPORTANTE | **Sin Sentry ni error tracking** — la app está en producción sin observabilidad. Crear cuenta gratuita en sentry.io → instalar `@sentry/nextjs` → agregar `SENTRY_DSN` en Vercel. Pendiente antes de tener usuarios reales. |
+| M5 | ⚠️ ESCALA | **listUsers() en webhook Hotmart es O(n)** — a 500+ usuarios empieza a ser lento. Solución definitiva: crear función RPC en Supabase que busque en `auth.users` por email con un índice. No bloquea el lanzamiento pero debe resolverse antes de los 300 usuarios. |
+
+### Puntos verificados sin cambios
+
+| Área | Estado | Notas |
+|------|--------|-------|
+| Secretos hardcodeados | ✅ | Ninguno — todo usa `process.env.*` |
+| Cartesia API key server-only | ✅ | No hay `NEXT_PUBLIC_CARTESIA_*` |
+| Hotmart hottok verificado | ✅ | Línea 71 del webhook — rechaza si no coincide |
+| Webhook idempotente | ✅ | Verifica `hotmart_orders` antes de procesar |
+| Webhook maneja approved/cancelled/refunded/chargeback | ✅ | Sets definidos en líneas 17-35 |
+| audio_assets RLS habilitado | ✅ | Solo lectura anónima; escritura solo service_role |
+| email_log RLS con `(select auth.uid())` | ✅ | Patrón de alto rendimiento |
+| Cron endpoints con CRON_SECRET | ✅ | Todos los 6 lo verifican |
+| Legal: /privacidad /terminos /reembolsos /aviso-ia | ✅ | Páginas existen |
+| Botón eliminar cuenta | ✅ | Abre email a soporte (sin endpoint auto — es aceptable) |
+| max_tokens limitado en IA | ✅ | 600 tokens en practica/route.ts |
+| ai_calls table para observabilidad | ✅ | Log best-effort en tts y practica |
+| vercel.json con crons configurados | ✅ | 6 crons definidos |
+| tsc --noEmit | ✅ | Pasa limpio tras correcciones |
+
+---
+
 ## Problemas conocidos
 
 - **[veredicto:onboarding] POSPUESTO A PRE-LAUNCH** El onboarding recibió múltiples rondas de mejoras de usabilidad y craft (v2→v3: 31→35 usabilidad, 14→13 craft). Se acepta con observaciones para revisión visual final antes del lanzamiento. Defectos conocidos documentados en `docs/revisiones/onboarding-veredicto.md`: (1) vacío muerto en zona inferior paso 0, (2) tercer plano de profundidad ausente, (3) pétalo ownable casi invisible a opacity:0.12, (4) logotext genérico en header, (5) track de progreso de baja perceptibilidad. No impide construcción de la app interna — se revisa en auditoría PRE-LAUNCH.

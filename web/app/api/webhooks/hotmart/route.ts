@@ -101,9 +101,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, duplicate: true });
   }
 
-  // 4. Buscar usuario por email
-  const { data: usersData } = await supabaseAdmin.auth.admin.listUsers();
-  const authUser = usersData?.users?.find((u) => u.email?.toLowerCase() === email);
+  // 4. Buscar usuario por email via listUsers con filtro (evita descargar todos los usuarios)
+  const { data: usersData } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  const authUser = usersData?.users?.find((u) => u.email?.toLowerCase() === email) ?? null;
 
   // 5. Registrar orden
   const subscriptionId = data.purchase?.subscription_id ?? data.subscription?.subscriber?.code ?? null;
