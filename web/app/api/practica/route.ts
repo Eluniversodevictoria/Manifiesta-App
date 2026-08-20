@@ -28,6 +28,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
+    // Verificar plan en servidor — nunca confiar en el cliente
+    const { data: settingsRaw } = await supabase
+      .from('user_settings')
+      .select('access_status, is_owner')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    const settings = settingsRaw as { access_status?: string; is_owner?: boolean } | null;
+    const tieneAcceso =
+      settings?.is_owner ||
+      settings?.access_status === 'paid_active' ||
+      settings?.access_status === 'trial_active';
+    if (!tieneAcceso) {
+      return NextResponse.json({ error: 'plan_required', message: 'Se requiere plan activo para generar prácticas con IA.' }, { status: 403 });
+    }
+
     const body = await req.json();
     const { dia, familia, deseoRaw } = body as {
       dia: number;
