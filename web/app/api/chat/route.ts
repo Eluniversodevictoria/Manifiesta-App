@@ -21,6 +21,15 @@ function periodoActual(): string {
 }
 
 export async function POST(req: NextRequest) {
+  try {
+    return await handlePost(req);
+  } catch (err) {
+    console.error('[chat/POST] unhandled:', err instanceof Error ? err.message : String(err));
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 });
+  }
+}
+
+async function handlePost(req: NextRequest) {
   const t0 = Date.now();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
