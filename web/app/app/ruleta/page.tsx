@@ -204,10 +204,11 @@ function ResultSheet({
         role="dialog" aria-modal="true" aria-label={`Premio: ${prizeConfig.nombre}`}
         initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-        className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl px-6 pt-6"
+        className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl px-6 pt-6 overflow-y-auto"
         style={{
           background: 'var(--bg)',
-          paddingBottom: 'calc(28px + env(safe-area-inset-bottom))',
+          maxHeight: '88dvh',
+          paddingBottom: 'calc(32px + env(safe-area-inset-bottom))',
           boxShadow: '0 -14px 48px rgba(34,20,26,0.2)',
         }}
       >
@@ -252,7 +253,7 @@ function ResultSheet({
           </p>
           <button
             type="button" onClick={onClose}
-            className="mt-6 w-full py-6 rounded-2xl text-white font-bold text-base [touch-action:manipulation]"
+            className="mt-6 w-full py-4 rounded-2xl text-white font-bold text-base [touch-action:manipulation]"
             style={{ background: `linear-gradient(135deg, ${prizeConfig.color} 0%, var(--accent) 100%)` }}
           >
             ¡Gracias, universo! ✦
