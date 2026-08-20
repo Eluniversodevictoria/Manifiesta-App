@@ -17,7 +17,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https:",
-      "media-src 'self' blob: https://ujhmhxwajpksnhuwumhf.supabase.co", // Supabase Storage audio
+      "media-src 'self' blob: https://fkugcdfdvfcsuolkxreg.supabase.co", // Supabase Storage audio
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.cartesia.ai https://api.anthropic.com https://api.resend.com",
       "frame-ancestors 'none'",
     ].join('; '),

@@ -3,6 +3,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdmin } from '@supabase/supabase-js';
 
+export const maxDuration = 60;
+
 const ai = new Anthropic();
 const AI_MODEL = process.env.AI_MODEL ?? 'claude-haiku-4-5-20251001';
 
