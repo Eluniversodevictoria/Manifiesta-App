@@ -1,6 +1,6 @@
 # ESTADO — MANIFIESTA con Victoria
 
-> Última actualización: 2026-08-19 (sesión tarde-3) · Fase: Producción — APTA PARA VENDER · PWA + Ruleta completadas
+> Última actualización: 2026-08-20 (sesión diseño-3) · Fase: Producción — APTA PARA VENDER · Pasada visual APROBADA EN PRODUCCIÓN
 
 ---
 
@@ -127,6 +127,11 @@ Micro-disclaimer IA en M0: "Orientación espiritual, no consejo profesional"
 Sin analytics ni cookies de terceros → sin banner de cookies obligatorio
 Subprocesadores declarados: Supabase · Vercel · Anthropic · Cartesia · Hotmart · Resend
 Ley aplicable: New Jersey, EE.UU. · CCPA declarada para usuarios en California
+
+### PASADA VISUAL PREMIUM — APROBADA EN PRODUCCIÓN (2026-08-20)
+
+M0 (Inicio) · Biblioteca · Chat con Victoria · Manifestaciones · PaywallModal
+Verificado por la dueña en producción. Sin regresiones. Sin rediseño adicional salvo bug real.
 
 ### PANTALLAS COMPLETADAS (sesiones anteriores + sesión actual)
 

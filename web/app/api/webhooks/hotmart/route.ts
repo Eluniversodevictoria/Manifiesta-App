@@ -101,9 +101,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, duplicate: true });
   }
 
-  // 4. Buscar usuario por email via listUsers con filtro (evita descargar todos los usuarios)
-  const { data: usersData } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-  const authUser = usersData?.users?.find((u) => u.email?.toLowerCase() === email) ?? null;
+  // 4. Buscar user_id por email via RPC indexada (O(1), reemplaza listUsers O(n))
+  const { data: foundUserId } = await supabaseAdmin.rpc('get_user_id_by_email', { p_email: email });
+  const userId: string | null = (foundUserId as string | null) ?? null;
 
   // 5. Registrar orden
   const subscriptionId = data.purchase?.subscription_id ?? data.subscription?.subscriber?.code ?? null;
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
     hotmart_order_id: transactionId,
     buyer_email: email,
     buyer_name: data.buyer.name ?? null,
-    user_id: authUser?.id ?? null,
+    user_id: userId,
     product_id: PRODUCT_ID || String(data.product?.id ?? ''),
     offer_code: data.purchase.offer?.code ?? null,
     plan_periodo: planPeriodo,
@@ -123,10 +123,10 @@ export async function POST(req: NextRequest) {
   }, { onConflict: 'hotmart_order_id' });
 
   // 6. Actualizar acceso en user_settings
-  if (authUser) {
+  if (userId) {
     if (esAprobado) {
       await supabaseAdmin.from('user_settings').upsert({
-        user_id: authUser.id,
+        user_id: userId,
         access_status: 'paid_active',
         plan_periodo: planPeriodo,
         hotmart_subscription_id: subscriptionId,
@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
       }, { onConflict: 'user_id' });
     } else {
       await supabaseAdmin.from('user_settings').upsert({
-        user_id: authUser.id,
+        user_id: userId,
         access_status: 'subscription_inactive',
         plan_periodo: null,
         hotmart_subscription_id: null,
@@ -145,11 +145,11 @@ export async function POST(req: NextRequest) {
   }
 
   // 7. Emails — best-effort, no bloquea respuesta a Hotmart
-  if (authUser) {
-    const user = await getUserEmail(authUser.id);
+  if (userId) {
+    const user = await getUserEmail(userId);
     const nombre = user?.name ?? data.buyer.name ?? 'amor';
     const emailTo = user?.email ?? email;
-    const uid = authUser.id;
+    const uid = userId;
 
     if (esAprobado) {
       const esNueva = !existing && (data.purchase.recurrence_number ?? 1) === 1;
