@@ -5,6 +5,7 @@ import {
   emailSuscripcionActivada,
   emailCancelacion,
   emailReembolso,
+  emailDunning,
 } from '@/lib/email/templates';
 
 function getSupabaseAdmin() {
@@ -82,8 +83,29 @@ export async function POST(req: NextRequest) {
 
   const esAprobado = EVENTOS_APROBADO.has(event);
   const esRevocado = EVENTOS_REVOCADO.has(event);
-  if (!esAprobado && !esRevocado) {
+  const esPagoFallido = event === 'PURCHASE_DELAYED';
+
+  if (!esAprobado && !esRevocado && !esPagoFallido) {
     return NextResponse.json({ ok: true, ignored: true });
+  }
+
+  // PURCHASE_DELAYED — pago fallido: enviar dunning email y marcar acceso como payment_pending
+  if (esPagoFallido) {
+    const { data: foundId } = await supabaseAdmin.rpc('get_user_id_by_email', { p_email: email });
+    const uid: string | null = (foundId as string | null) ?? null;
+    if (uid) {
+      await supabaseAdmin.from('user_settings').upsert({
+        user_id: uid,
+        access_status: 'payment_pending',
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
+      const user = await getUserEmail(uid);
+      const nombre = user?.name ?? data.buyer.name ?? 'amor';
+      const emailTo = user?.email ?? email;
+      const tpl = emailDunning(nombre);
+      void enviarEmail({ to: emailTo, subject: tpl.subject, html: tpl.html, tipo: 'dunning', userId: uid });
+    }
+    return NextResponse.json({ ok: true });
   }
 
   // 2. Periodo

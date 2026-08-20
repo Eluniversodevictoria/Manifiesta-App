@@ -254,6 +254,21 @@ export function emailWinbackCancelada(nombre: string): { subject: string; html: 
   };
 }
 
+export function emailDunning(nombre: string): { subject: string; html: string } {
+  return {
+    subject: 'Hubo un problema con tu pago en MANIFIESTA 🌙',
+    html: shell(
+      h1('Hola ' + nombre + ', algo pasó con tu pago.') +
+      p('Intentamos procesar el cobro de tu suscripción a MANIFIESTA, pero no fue posible. Puede ser que tu tarjeta haya vencido o que los datos necesiten actualizarse.') +
+      accentBox('Tu acceso sigue activo por ahora. Pero si no se resuelve pronto, se pausará automáticamente.') +
+      p('Para mantener tu práctica sin interrupciones, actualiza tu método de pago en Hotmart:') +
+      cta('Actualizar mi método de pago →', 'https://app.hotmart.com/') +
+      p('Si crees que es un error o necesitas ayuda, responde este email directamente y lo revisamos juntas.') +
+      unsubscribeFooter('avisos de cuenta')
+    ),
+  };
+}
+
 // Re-engagement — usuaria activa sin práctica en 3+ días
 // Si hay deseo activo, el recordatorio lo menciona directamente
 export function emailReengagementInactiva(
@@ -285,3 +300,21 @@ export function emailReengagementInactiva(
   };
 }
 
+
+// P2 — Recuperación de acceso con voz de Victoria (magic link personalizado)
+export function emailRecuperacionAcceso(
+  nombre: string,
+  magicLink: string
+): { subject: string; html: string } {
+  return {
+    subject: nombre + ', aquí está tu enlace para entrar a MANIFIESTA 🌙',
+    html: shell(
+      h1('Hola ' + nombre + ', solicitaste acceder a tu cuenta.') +
+      p('Sin problema — aquí está tu enlace de acceso personal. Solo haz clic y entrarás directamente, sin contraseña:') +
+      cta('Entrar a MANIFIESTA →', magicLink) +
+      accentBox('Este enlace es válido por 1 hora y solo funciona una vez. Si no lo pediste tú, puedes ignorar este email.') +
+      p('Tu práctica, tus deseos y todo tu historial siguen ahí, esperándote exactamente donde los dejaste. ✦') +
+      unsubscribeFooter('acceso a tu cuenta')
+    ),
+  };
+}

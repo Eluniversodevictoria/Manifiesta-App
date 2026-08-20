@@ -15,7 +15,9 @@ export type EmailTipo =
   | 'trial_expired'
   | 'winback_trial'
   | 'winback_cancelled'
-  | 'reengagement_inactiva';
+  | 'reengagement_inactiva'
+  | 'dunning'
+  | 'recovery_access';
 
 interface SendOptions {
   to: string;
