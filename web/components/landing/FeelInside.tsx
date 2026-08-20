@@ -16,7 +16,7 @@ export interface FeelInsideProps {
 const SLIDES = [
   {
     kicker: 'TU PRÁCTICA',
-    headline: 'Todo lo que necesitas practicar hoy, en un solo lugar.',
+    headline: 'Tu práctica de hoy — para leer, o para escucharla con la voz de Victoria.',
     screen: 'Tu práctica de hoy',
     img: '/mockups/screen-practica.png',
   },
@@ -40,12 +40,18 @@ const SLIDES = [
   },
   {
     kicker: 'PARA EXPLORAR',
-    headline: 'Rituales, scripting y prácticas cuando quieras ir un poco más profundo.',
+    headline: 'Rituales, visualizaciones y scripting. Y cada semana hay algo nuevo.',
     screen: 'Biblioteca',
     img: '/mockups/screen-biblioteca.png',
   },
   {
     kicker: 'TU HISTORIA',
+    headline: 'Revisa todo lo que hiciste para llegar hasta aquí. Tu proceso, completo.',
+    screen: 'Mi historial',
+    img: '/mockups/screen-historial.png',
+  },
+  {
+    kicker: 'EL MOMENTO',
     headline: 'Guarda ese momento en el que dejó de ser un deseo.',
     screen: 'Se manifestó ✨',
     img: '/mockups/screen-manifesto.png',

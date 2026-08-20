@@ -26,7 +26,7 @@ const PASOS = [
     icono: PenLine,
     lead: 'Recibe algo creado para ti',
     detalle:
-      'Victoria prepara una práctica combinando afirmación, scripting, ritual y una acción para hoy. No tienes que decidir qué técnica hacer. Abres MANIFIESTA y está lista.',
+      'Victoria prepara una práctica combinando afirmación, scripting, ritual y una acción para hoy. Puedes leerla o escucharla con la voz de Victoria. No tienes que decidir qué técnica usar. Abres MANIFIESTA y está lista.',
   },
   {
     num: '03',

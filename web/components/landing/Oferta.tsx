@@ -42,14 +42,14 @@ function CountUpPrice({ value }: { value: string }) {
 }
 
 const FEATURES_ANUAL = [
-  'Prácticas personalizadas para tu deseo',
-  '"Necesito manifestar…" cuando quieras',
-  'Seguimiento de tus manifestaciones',
-  'Journal conectado a tus deseos',
-  'Biblioteca completa',
-  'Historial de prácticas',
-  'Se manifestó ✨',
-  'Victoria recuerda lo que estás trabajando',
+  'Práctica diaria: afirmación, scripting, ritual y acción concreta',
+  'Audio guiado con la voz de Victoria',
+  '"Necesito manifestar…" para cuando algo no puede esperar',
+  'Manifestaciones activas con seguimiento de tu proceso',
+  'Biblioteca de rituales, visualizaciones y scripting',
+  'Historial completo de tu práctica',
+  'Contenido nuevo cada semana — rituales, prácticas y más',
+  'Se manifestó ✨ — marca el momento en que llegó',
 ];
 
 

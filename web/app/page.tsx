@@ -41,7 +41,12 @@ const FAQ_ITEMS = [
   {
     pregunta: '¿En qué se diferencia de una app de afirmaciones?',
     respuesta:
-      'Las apps de afirmaciones suelen mostrar frases creadas para temas generales. MANIFIESTA empieza con lo que tú quieres manifestar. Victoria utiliza ese deseo para crear una práctica que puede combinar afirmación, scripting, ritual y una acción concreta.',
+      'Las apps de afirmaciones suelen mostrar frases creadas para temas generales. MANIFIESTA empieza con lo que tú quieres manifestar. Victoria utiliza ese deseo para crear una práctica que combina afirmación, scripting, ritual y una acción concreta — y puedes escucharla con la voz de Victoria en lugar de solo leerla.',
+  },
+  {
+    pregunta: '¿MANIFIESTA seguirá creciendo?',
+    respuesta:
+      'Sí. Cada semana se añaden nuevas prácticas, rituales, visualizaciones, afirmaciones y contenido de la Biblioteca. La suscripción incluye todo lo nuevo automáticamente — no es un producto estático.',
   },
   {
     pregunta: '¿Cuánto tiempo necesito cada día?',
