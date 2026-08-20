@@ -262,6 +262,7 @@ Todo lo siguiente está ACTIVO y funcionando:
 | Notificaciones push web (7 notificaciones) | ✅ |
 | Edge Function push-notify (Supabase) | ✅ |
 | Tabla push_subscriptions con RLS | ✅ |
+| Tour guiado de primera vez (4 pasos) | ✅ |
 | Headers de seguridad (CSP, X-Frame-Options…) | ✅ |
 | Cron recordatorio diario (8am UTC) | ✅ |
 | Deploy Vercel automático desde GitHub | ✅ |
@@ -283,6 +284,21 @@ VAPID keys guardadas como secrets en Supabase y como env var en Vercel (`NEXT_PU
 | 7 | Contenido nuevo en Biblioteca | Manual desde admin (pendiente UI admin) |
 
 **Activación en iOS:** instalar como PWA (Safari → compartir → Agregar a pantalla de inicio) → Perfil → Activar.
+
+### TOUR GUIADO DE PRIMERA VEZ — (2026-08-19)
+
+Componente: `components/FirstTimeTour.tsx` — montado en `AppShell.tsx`.
+Aparece 0.8s después de entrar a la app. Solo la primera vez (localStorage key: `manifiesta_tour_done`).
+No modifica el diseño ni la funcionalidad existente — capa de overlay sobre la UI.
+
+| Paso | Elemento resaltado | data-tour attribute |
+|------|--------------------|---------------------|
+| 1 | Card "Tu práctica de hoy" | `data-tour="practica"` en `app/app/page.tsx` |
+| 2 | Botón "Lo hice hoy" | `data-tour="checkin"` en `app/app/page.tsx` |
+| 3 | Botón "Necesito manifestar ahora" | `data-tour="urgente"` en `app/app/page.tsx` |
+| 4 | Tab Biblioteca en BottomNav | `data-tour="biblioteca"` en `app/app/BottomNav.tsx` |
+
+Para testear: abrir en modo incógnito o borrar `manifiesta_tour_done` del localStorage.
 
 ### PRÓXIMOS PASOS SUGERIDOS
 
