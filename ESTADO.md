@@ -1,6 +1,6 @@
 # ESTADO — MANIFIESTA con Victoria
 
-> Última actualización: 2026-08-19 · Fase: Producción — modelo de acceso trial/suscripción migrado a Supabase
+> Última actualización: 2026-08-19 (sesión tarde) · Fase: Producción — APTA PARA VENDER · Notificaciones push activas
 
 ---
 
@@ -89,8 +89,6 @@ Anotado: construcción avanza con gate de audiencia propia; se persigue señal d
 ## FUNCIONES QUE NO SE CONSTRUYEN AHORA
 
 - Comunidad / perfiles públicos
-- Audio / meditaciones guiadas
-- Notificaciones push (web, no nativa)
 - IA que "aprende" el estilo con el tiempo (v2)
 
 ---
@@ -243,24 +241,56 @@ Fuente de datos futura: `event_log` — JOIN de los 3 eventos por `user_id`, ORD
 
 `tsc ✓ · build ✓`
 
-### PRÓXIMOS PASOS
+### ESTADO ACTUAL DE PRODUCCIÓN (2026-08-19)
 
-1. ~~Revisión visual M0~~ ✅ APROBADO CON OBSERVACIONES MENORES
-2. ~~Historial desde PracticeSnapshot~~ ✅ COMPLETADO (2026-08-17)
-3. ~~Mockups reales en landing~~ ✅ COMPLETADO (2026-08-18) — Demo + FeelInside con screenshots reales
-4. ~~Paywall + lógica FREE/PRO LOCAL/MOCK~~ ✅ CERRADO (2026-08-17)
-5. ~~SheetUrgente gateado y conectado~~ ✅ CERRADO (2026-08-17)
-6. ~~Crear FICHA-ARTE.md, FICHA-MERCADO.md~~ ✅ COMPLETADO (2026-08-17)
-7. ~~Supabase schema + Admin `/admin`~~ ✅ COMPLETADO (2026-08-18) — Fase 5+6 juntas
-8. **PENDIENTE MANUAL**: restaurar proyecto Supabase si pausado → correr migración 002_admin_roles.sql → SET is_owner=true para tu email
-9. ~~Webhook Hotmart (`POST /api/webhooks/hotmart`) + Resend~~  ✅ COMPLETADO (2026-08-18)
-10. **PENDIENTE CONFIGURAR**: agregar en `.env.local` (y en Vercel):
-    - `HOTMART_HOTTOK` — token del webhook en tu panel Hotmart
-    - `HOTMART_PRODUCT_ID` — ID del producto en Hotmart
-    - `RESEND_API_KEY` — desde resend.com
-    - `SUPABASE_SERVICE_ROLE_KEY` — desde Supabase → Project Settings → API (NUNCA en cliente)
-    - `NEXT_PUBLIC_APP_URL` — URL de producción (ej. https://manifiesta.app)
-11. Gate de seguridad + deploy a producción
+**URL:** https://manifiesta-app-sooty.vercel.app
+**Supabase project ref:** fkugcdfdvfcsuolkxreg (región: ca-central-1)
+**Vercel team:** el-universo-de-victoria / manifiesta-app
+**GitHub:** Eluniversodevictoria/Manifiesta-App · rama main
+
+Todo lo siguiente está ACTIVO y funcionando:
+
+| Sistema | Estado |
+|---------|--------|
+| Auth (Supabase SSR) | ✅ |
+| Webhook Hotmart + firma hottok | ✅ |
+| Emails transaccionales (Resend) | ✅ |
+| Trial 7 días + crons de emails | ✅ |
+| Bucket audio-biblioteca (Supabase Storage) | ✅ |
+| TTS Cartesia con caché en DB | ✅ |
+| Tabla audio_assets con RLS | ✅ |
+| Notificaciones push web (7 notificaciones) | ✅ |
+| Edge Function push-notify (Supabase) | ✅ |
+| Tabla push_subscriptions con RLS | ✅ |
+| Headers de seguridad (CSP, X-Frame-Options…) | ✅ |
+| Cron recordatorio diario (8am UTC) | ✅ |
+| Deploy Vercel automático desde GitHub | ✅ |
+
+### NOTIFICACIONES PUSH — IMPLEMENTADAS (2026-08-19)
+
+Infraestructura: Service Worker (`public/sw.js`) + Edge Function Supabase `push-notify` + tabla `push_subscriptions` + API routes `/api/push/subscribe` y `/api/push/send` + helper `lib/push.ts`.
+
+VAPID keys guardadas como secrets en Supabase y como env var en Vercel (`NEXT_PUBLIC_VAPID_PUBLIC_KEY`).
+
+| # | Trigger | Título |
+|---|---------|--------|
+| 1 | Cron 8am UTC diario (usuarias activas) | "✨ Tu práctica de hoy te espera" |
+| 2 | Al completar práctica del día | "🌟 ¡Práctica completada!" |
+| 3 | Al llegar a racha 7/14/21/30 días | "🔥 ¡X días seguidos manifestando!" |
+| 4 | Al marcar "Se manifestó ✨" | "✨ ¡Se manifestó!" |
+| 5 | Cron trial-d7 (junto al email) | "⏳ Tu acceso completo termina mañana" |
+| 6 | Nueva práctica disponible | Incluida en cron del #1 |
+| 7 | Contenido nuevo en Biblioteca | Manual desde admin (pendiente UI admin) |
+
+**Activación en iOS:** instalar como PWA (Safari → compartir → Agregar a pantalla de inicio) → Perfil → Activar.
+
+### PRÓXIMOS PASOS SUGERIDOS
+
+1. Conectar dominio propio (ej. manifiesta.app) en Vercel
+2. Instalar Sentry para monitoreo de errores en producción (`@sentry/nextjs`)
+3. Revisión visual pre-launch: landing y paywall con revisor-visual (veredictos pendientes)
+4. Función RPC en Supabase para lookup por email en webhook Hotmart (escala >300 usuarios)
+5. Endpoint `/api/delete-account` (hoy redirige a email de soporte — aceptable para el inicio)
 
 ### ENGINE D1-D30 — APROBADO (2026-08-17)
 
@@ -296,7 +326,7 @@ Historial UI actual usa `checkIns` para mostrar la cronología. Los `PracticeSna
 
 ## AUDITORÍA DE PRODUCCIÓN — 2026-08-19
 
-**Veredicto: NO APTO para lanzamiento público** — 2 bloqueantes corregidos en código, 5 acciones manuales requeridas antes de abrir tráfico real.
+**Veredicto FINAL: ✅ APTA PARA VENDER** — todos los bloqueantes resueltos (sesión tarde 2026-08-19).
 
 ### Correcciones aplicadas en código (tsc ✓)
 
