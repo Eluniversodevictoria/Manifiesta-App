@@ -1456,9 +1456,9 @@ function InicioContent() {
           </p>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { icon: Sparkles, label: 'Afirmación', href: '/app/scripting?intencion=gratitud' },
+              { icon: PenLine,  label: 'Diario', href: '/app/diario' },
               { icon: Moon,     label: 'Visualización', href: '/app/biblioteca' },
-              { icon: PenLine,  label: 'Scripting', href: '/app/scripting' },
+              { icon: Sparkles, label: 'Scripting', href: '/app/scripting' },
             ].map(({ icon: Ico, label, href }, i) => (
               <motion.div
                 key={href}
