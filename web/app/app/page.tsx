@@ -1405,6 +1405,39 @@ function InicioContent() {
           </Link>
         </motion.div>
 
+        {/* ── CHAT CON VICTORIA ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.35 }}
+        >
+          <Link
+            href="/app/chat"
+            className="flex w-full items-center gap-4 rounded-[var(--radius-card)] p-4 [touch-action:manipulation]"
+            style={{
+              background: 'var(--surface)',
+              boxShadow: 'var(--shadow-1)',
+            }}
+          >
+            <span
+              className="flex size-10 shrink-0 items-center justify-center rounded-xl"
+              style={{ background: 'var(--chip-bg)' }}
+              aria-hidden="true"
+            >
+              <Moon size={18} color="var(--accent)" strokeWidth={2} />
+            </span>
+            <div className="min-w-0 flex-1 text-left">
+              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
+                Habla con Victoria
+              </p>
+              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                Tu guía de manifestación, disponible cuando la necesitas
+              </p>
+            </div>
+            <ChevronRight size={16} color="var(--text-tertiary)" aria-hidden="true" />
+          </Link>
+        </motion.div>
+
         {/* ── NECESITO MANIFESTAR — después de Biblioteca ── */}
         <motion.div
           initial={{ opacity: 0 }}
