@@ -21,7 +21,10 @@ const DESEO_LABELS: Record<string, string> = {
 
 const FEATURES = [
   'Práctica diaria personalizada por Victoria',
+  'Audio con la voz de Victoria — escúchala, no solo la leas',
+  'Chat con Victoria — 30 conversaciones al mes',
   '"Necesito manifestar…" — práctica al instante',
+  'Biblioteca con contenido nuevo cada semana',
   'Historial y seguimiento de lo manifestado',
 ];
 

@@ -43,11 +43,11 @@ function CountUpPrice({ value }: { value: string }) {
 
 const FEATURES_ANUAL = [
   'Práctica diaria: afirmación, scripting, ritual y acción concreta',
-  'Audio guiado con la voz de Victoria',
+  'Audio guiado con la voz de Victoria — escúchala, no solo la leas',
   '"Necesito manifestar…" para cuando algo no puede esperar',
+  'Chat con Victoria — 30 conversaciones al mes, cuando la necesitas',
   'Manifestaciones activas con seguimiento de tu proceso',
   'Biblioteca de rituales, visualizaciones y scripting',
-  'Historial completo de tu práctica',
   'Contenido nuevo cada semana — rituales, prácticas y más',
   'Se manifestó ✨ — marca el momento en que llegó',
 ];

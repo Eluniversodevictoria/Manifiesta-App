@@ -15,8 +15,10 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 
 const BENEFICIOS = [
   'Práctica diaria personalizada por Victoria',
+  'Audio con la voz de Victoria — escúchala, no solo la leas',
+  'Chat con Victoria — 30 conversaciones al mes',
   '"Necesito manifestar…" — práctica al instante',
-  'Manifestaciones y biblioteca sin límites',
+  'Biblioteca con contenido nuevo cada semana',
   'Historial completo de tu práctica',
 ];
 

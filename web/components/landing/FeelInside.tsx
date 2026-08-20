@@ -33,14 +33,14 @@ const SLIDES = [
     img: '/mockups/screen-urgente.png',
   },
   {
-    kicker: 'TU ESPACIO',
-    headline: 'Escribe lo que estás sintiendo mientras todo va tomando forma.',
-    screen: 'Mi journal',
-    img: '/mockups/screen-journal.png',
+    kicker: 'HABLA CON VICTORIA',
+    headline: 'Cuéntale dónde estás. Victoria escucha, acompaña y te da lo que necesitas.',
+    screen: 'Chat con Victoria',
+    img: '/mockups/screen-practica.png',
   },
   {
     kicker: 'PARA EXPLORAR',
-    headline: 'Rituales, visualizaciones y scripting. Y cada semana hay algo nuevo.',
+    headline: 'Rituales, visualizaciones y scripting. Contenido nuevo cada semana.',
     screen: 'Biblioteca',
     img: '/mockups/screen-biblioteca.png',
   },
@@ -48,7 +48,7 @@ const SLIDES = [
     kicker: 'TU HISTORIA',
     headline: 'Revisa todo lo que hiciste para llegar hasta aquí. Tu proceso, completo.',
     screen: 'Mi historial',
-    img: '/mockups/screen-historial.png',
+    img: '/mockups/m-historial.png',
   },
   {
     kicker: 'EL MOMENTO',
